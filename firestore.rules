@@ -1,0 +1,173 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function getRole() {
+      return request.auth.token.role;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    function hasRole(role) {
+      return isAuthenticated() && getRole() == role;
+    }
+    function isAdmin() {
+      return hasRole('admin');
+    }
+    function isTeacher() {
+      return hasRole('teacher');
+    }
+
+    // ─── Users profiles ───
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated();
+    }
+
+    // ─── Students ───
+    match /students/{studentId} {
+      // Student can read own profile.
+      // Parent can read if they are the parent.
+      // Teacher relies on API or must be in assignedTeacherIds if added.
+      allow read: if isOwner(studentId) || 
+                     (isAuthenticated() && resource.data.parentId == request.auth.uid) ||
+                     (isTeacher() && (request.auth.uid in resource.data.assignedTeacherIds || !("assignedTeacherIds" in resource.data))) || 
+                     isAdmin();
+      allow create: if isAdmin() || (isAuthenticated() && getRole() == 'parent');
+      allow update: if isAdmin() || isOwner(studentId) || (isAuthenticated() && resource.data.parentId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // ─── Parents ───
+    match /parents/{parentId} {
+      allow read: if isOwner(parentId) || isAdmin();
+      allow create: if isAdmin() || isAuthenticated();
+      allow update: if isAdmin() || isOwner(parentId);
+      allow delete: if isAdmin();
+    }
+
+    // ─── Teachers ───
+    match /teachers/{teacherId} {
+      allow read: if isAuthenticated(); // Students/parents need to see teacher profiles
+      allow create: if isAdmin();
+      allow update: if isAdmin() || isOwner(teacherId);
+      allow delete: if isAdmin();
+    }
+
+    // ─── Admins ───
+    match /admins/{adminId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ─── Courses ───
+    match /courses/{courseId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ─── Enrollments ───
+    match /enrollments/{enrollmentId} {
+      // Teachers can only read enrollments for their classes (checked via assigned class list or API)
+      allow read: if isAdmin() || isTeacher() ||
+                     (isAuthenticated() && resource.data.studentId == request.auth.uid) ||
+                     (isAuthenticated() && resource.data.parentId == request.auth.uid);
+      allow create: if isAuthenticated(); // Parent/Student creates pending enrollment
+      allow update: if isAdmin() || isTeacher(); // Admin/Teacher activates it
+      allow delete: if isAdmin();
+    }
+
+    // ─── Classes ───
+    match /classes/{classId} {
+      allow read: if isAuthenticated(); // Students need to read their enrolled classes
+      allow create, update: if isAdmin() || (isTeacher() && resource.data.teacherId == request.auth.uid) || (isTeacher() && request.resource.data.teacherId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // ─── Assignments & Submissions ───
+    match /assignments/{assignmentId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin() || (isTeacher() && resource.data.teacherId == request.auth.uid) || (isTeacher() && request.resource.data.teacherId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+    match /assignment_submissions/{subId} {
+      allow read: if isAdmin() || isTeacher() || 
+                     (isAuthenticated() && resource.data.studentId == request.auth.uid) ||
+                     (isAuthenticated() && resource.data.parentId == request.auth.uid);
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.studentId;
+      allow update: if isAdmin() || isTeacher();
+      allow delete: if isAdmin();
+    }
+
+    // ─── Quizzes & Attempts ───
+    match /quizzes/{quizId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin() || isTeacher();
+      allow delete: if isAdmin();
+    }
+    match /quiz_attempts/{attemptId} {
+      allow read: if isAdmin() || isTeacher() || 
+                     (isAuthenticated() && resource.data.studentId == request.auth.uid) ||
+                     (isAuthenticated() && resource.data.parentId == request.auth.uid);
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.studentId;
+      allow update: if isAdmin() || isTeacher();
+      allow delete: if isAdmin();
+    }
+
+    // ─── Attendance ───
+    match /attendance/{attendanceId} {
+      allow read: if isAdmin() || isTeacher() || 
+                     (isAuthenticated() && resource.data.studentId == request.auth.uid) ||
+                     (isAuthenticated() && resource.data.parentId == request.auth.uid);
+      allow create, update: if isAdmin() || isTeacher();
+      allow delete: if isAdmin();
+    }
+
+    // ─── Payments & Subscriptions ───
+    match /payments/{paymentId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.parentId == request.auth.uid);
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.parentId;
+      allow update, delete: if isAdmin();
+    }
+    
+    match /subscriptions/{subId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.parentId == request.auth.uid) || (isAuthenticated() && resource.data.studentId == request.auth.uid);
+      allow create: if isAdmin() || isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    // ─── Certificates & Badges ───
+    match /certificates/{certificateId} {
+      allow read: if isAuthenticated(); 
+      allow create, update: if isAdmin() || isTeacher();
+      allow delete: if isAdmin();
+    }
+    match /badges/{badgeId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin() || isTeacher();
+      allow delete: if isAdmin();
+    }
+
+    // ─── Teacher Assignments ───
+    match /teacherAssignments/{documentId} {
+      allow read, write: if false; // Accessed exclusively via Next.js backend (Admin SDK)
+    }
+
+    // ─── Student Videos ───
+    match /studentVideos/{documentId} {
+      allow read, write: if false; // Accessed exclusively via Next.js backend (Admin SDK)
+    }
+
+    // ─── Notifications ───
+    match /notifications/{notificationId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create, update: if isAdmin() || isTeacher() || (isAuthenticated() && request.auth.uid == request.resource.data.userId);
+      allow delete: if isAdmin() || isOwner(resource.data.userId);
+    }
+  }
+}

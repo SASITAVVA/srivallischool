@@ -1,0 +1,46 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'admin';
+    }
+    function isTeacher() {
+      return isAuthenticated() && request.auth.token.role == 'teacher';
+    }
+    
+    // Student submissions (videos, pdfs, docs)
+    // Structure: submissions/{studentId}/{assignmentId}/{fileName}
+    match /submissions/{studentId}/{allPaths=**} {
+      // Admin can read all
+      // Student can read their own
+      // Teacher relies on UI, but we allow them to read any submission. 
+      // (For strict isolation, we would need to check if the teacher is assigned, but Storage Rules don't query Firestore easily)
+      allow read: if isAdmin() || isTeacher() || (isAuthenticated() && request.auth.uid == studentId);
+      
+      // Student can upload their own files
+      allow write: if isAdmin() || (isAuthenticated() && request.auth.uid == studentId);
+    }
+    
+    // Course Materials
+    match /materials/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isTeacher();
+    }
+    
+    // Profile Images
+    match /profiles/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
+    }
+    
+    // Default fallback
+    match /{allPaths=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

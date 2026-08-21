@@ -1,0 +1,40 @@
+import { adminAuth, adminDb } from '@/lib/firebaseAdmin';
+import { NextResponse } from 'next/server';
+import { FieldValue } from 'firebase-admin/firestore';
+
+const SEED_USERS = [
+  { email: 'teacher@srivalli.com', password: 'Teacher@123', name: 'Priya Sharma', role: 'teacher', subject: 'English Communication', mobile: '+91 98765 43211' },
+  { email: 'student@srivalli.com', password: 'Student@123', name: 'Aarav Kumar', role: 'student', grade: 8, gender: 'Male', parentName: 'Raj Kumar', parentMobile: '+91 98765 43212' },
+  { email: 'parent@srivalli.com', password: 'Parent@123', name: 'Raj Kumar', role: 'parent', mobile: '+91 98765 43212', city: 'Hyderabad', state: 'Telangana' },
+];
+
+export async function GET() {
+  try {
+    const results: Array<{ email: string; role: string; status: string; password?: string }> = [];
+    for (const user of SEED_USERS) {
+      try {
+        await adminAuth.getUserByEmail(user.email);
+        results.push({ email: user.email, role: user.role, status: 'already exists' });
+      } catch (err: unknown) {
+        const fe = err as { code?: string };
+        if (fe.code === 'auth/user-not-found') {
+          const ur = await adminAuth.createUser({ email: user.email, password: user.password, displayName: user.name });
+          await adminAuth.setCustomUserClaims(ur.uid, { role: user.role });
+          const col = user.role === 'teacher' ? 'teachers' : user.role === 'student' ? 'students' : 'parents';
+          const pd: Record<string, unknown> = { name: user.name, email: user.email, mobile: user.mobile || '', uid: ur.uid, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() };
+          if (user.role === 'teacher') pd.subject = user.subject;
+          if (user.role === 'student') { pd.grade = user.grade; pd.gender = user.gender; pd.parentName = user.parentName; pd.parentMobile = user.parentMobile; }
+          if (user.role === 'parent') { pd.city = user.city; pd.state = user.state; }
+          await adminDb.collection(col).doc(ur.uid).set(pd);
+          await adminDb.collection('users').doc(ur.uid).set({ name: user.name, email: user.email, role: user.role, uid: ur.uid, createdAt: FieldValue.serverTimestamp() });
+          results.push({ email: user.email, role: user.role, status: 'created', password: user.password });
+        } else {
+          results.push({ email: user.email, role: user.role, status: 'error: ' + (fe.code || 'unknown') });
+        }
+      }
+    }
+    return NextResponse.json({ success: true, results });
+  } catch (error) {
+    return NextResponse.json({ success: false, message: 'Failed to seed users' }, { status: 500 });
+  }
+}
