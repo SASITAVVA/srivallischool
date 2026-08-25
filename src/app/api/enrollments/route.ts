@@ -2,6 +2,7 @@ import { adminDb } from '@/lib/firebaseAdmin'
 import { verifyToken, requireRole, handleApiError } from '@/lib/verifyToken'
 import { NextResponse } from 'next/server'
 import { FieldValue } from 'firebase-admin/firestore'
+import { z } from 'zod'
 
 /** Recursively convert Firestore Timestamps to ISO strings */
 function convertTimestamps(data: any): any {
@@ -61,15 +62,52 @@ async function populateEnrollments(enrollmentObjs: any[]): Promise<any[]> {
   }))
 }
 
+// ✅ FIX #1: Add validation schema
+const CreateEnrollmentSchema = z.object({
+  studentId: z.string().min(1, 'Student ID is required'),
+  courseId: z.string().min(1, 'Course ID is required'),
+  plan: z.enum(['weekly', 'monthly'], {
+    errorMap: () => ({ message: 'Plan must be weekly or monthly' }),
+  }),
+})
+
 // POST create enrollment
+// ✅ FIX #1: Add authentication and authorization
 export async function POST(req: Request) {
   try {
-    const { studentId, courseId, plan } = await req.json()
+    // ✅ Verify authentication
+    const user = await verifyToken(req)
 
-    if (!studentId || !courseId || !plan) {
+    // Parse and validate input
+    const body = await req.json()
+    const validated = CreateEnrollmentSchema.parse(body)
+    const { studentId, courseId, plan } = validated
+
+    // ✅ Authorization checks
+    // Students can only enroll themselves
+    if (user.role === 'student' && user.uid !== studentId) {
       return NextResponse.json(
-        { success: false, message: 'studentId, courseId, and plan are required' },
-        { status: 400 }
+        { success: false, message: 'Can only enroll yourself in courses' },
+        { status: 403 }
+      )
+    }
+
+    // Parents can only enroll their children
+    if (user.role === 'parent') {
+      const studentDoc = await adminDb.collection('students').doc(studentId).get()
+      if (!studentDoc.exists || studentDoc.data()?.parentId !== user.uid) {
+        return NextResponse.json(
+          { success: false, message: 'Can only enroll your children in courses' },
+          { status: 403 }
+        )
+      }
+    }
+
+    // Only these roles can create enrollments
+    if (!['admin', 'parent', 'student'].includes(user.role)) {
+      return NextResponse.json(
+        { success: false, message: 'Your role cannot create enrollments' },
+        { status: 403 }
       )
     }
 
@@ -79,6 +117,14 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { success: false, message: 'Student not found' },
         { status: 404 }
+      )
+    }
+
+    // Verify student is active
+    if (studentSnap.data()?.isActive === false) {
+      return NextResponse.json(
+        { success: false, message: 'Student account is inactive' },
+        { status: 403 }
       )
     }
 
@@ -130,6 +176,20 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, enrollment: populated }, { status: 201 })
   } catch (error) {
+    // ✅ Handle Zod validation errors
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Validation error',
+          errors: error.errors.map(e => ({
+            field: e.path.join('.'),
+            message: e.message,
+          })),
+        },
+        { status: 400 }
+      )
+    }
     return handleApiError(error)
   }
 }
@@ -137,7 +197,7 @@ export async function POST(req: Request) {
 // GET enrollments by studentId
 export async function GET(req: Request) {
   try {
-    const user = await verifyToken(req);
+    const user = await verifyToken(req)
     const { searchParams } = new URL(req.url)
     const studentId = searchParams.get('studentId')
 
@@ -150,12 +210,12 @@ export async function GET(req: Request) {
 
     // Role-based authorization
     if (user.role === 'student' && user.uid !== studentId) {
-      return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 })
     }
     if (user.role === 'parent') {
-      const studentDoc = await adminDb.collection('students').doc(studentId).get();
+      const studentDoc = await adminDb.collection('students').doc(studentId).get()
       if (!studentDoc.exists || studentDoc.data()?.parentId !== user.uid) {
-        return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
+        return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 })
       }
     }
 
@@ -166,10 +226,10 @@ export async function GET(req: Request) {
 
     const enrollmentObjs = snapshot.docs.map(docToObj)
     enrollmentObjs.sort((a, b) => {
-      const dateA = a.createdAt || '';
-      const dateB = b.createdAt || '';
-      return dateB.localeCompare(dateA);
-    });
+      const dateA = a.createdAt || ''
+      const dateB = b.createdAt || ''
+      return dateB.localeCompare(dateA)
+    })
 
     const enrollments = await populateEnrollments(enrollmentObjs)
 
@@ -186,54 +246,60 @@ export async function GET(req: Request) {
 // DELETE enrollment
 export async function DELETE(req: Request) {
   try {
-    await requireRole(req, ['admin']);
-    const { id } = await req.json();
+    await requireRole(req, ['admin'])
+    const { id } = await req.json()
 
     if (!id) {
-      return NextResponse.json({ success: false, message: 'Enrollment ID is required' }, { status: 400 });
+      return NextResponse.json({ success: false, message: 'Enrollment ID is required' }, { status: 400 })
     }
 
-    const docRef = adminDb.collection('enrollments').doc(id);
-    const doc = await docRef.get();
+    const docRef = adminDb.collection('enrollments').doc(id)
+    const doc = await docRef.get()
     if (!doc.exists) {
-      return NextResponse.json({ success: false, message: 'Enrollment not found' }, { status: 404 });
+      return NextResponse.json({ success: false, message: 'Enrollment not found' }, { status: 404 })
     }
 
-    await docRef.delete();
+    await docRef.delete()
 
-    return NextResponse.json({ success: true, message: 'Enrollment deleted successfully' });
+    return NextResponse.json({ success: true, message: 'Enrollment deleted successfully' })
   } catch (error) {
-    return handleApiError(error);
+    return handleApiError(error)
   }
 }
-
-
 
 // PUT update enrollment status and paymentStatus
 export async function PUT(req: Request) {
   try {
-    await requireRole(req, ['admin']);
-    const { id, status, paymentStatus } = await req.json();
+    await requireRole(req, ['admin'])
+    const { id, status, paymentStatus } = await req.json()
 
     if (!id) {
-      return NextResponse.json({ success: false, message: 'Enrollment ID is required' }, { status: 400 });
+      return NextResponse.json({ success: false, message: 'Enrollment ID is required' }, { status: 400 })
     }
 
-    const docRef = adminDb.collection('enrollments').doc(id);
-    const doc = await docRef.get();
+    // ✅ Validate status values
+    if (status && !['active', 'inactive', 'completed', 'cancelled'].includes(status)) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid status value' },
+        { status: 400 }
+      )
+    }
+
+    const docRef = adminDb.collection('enrollments').doc(id)
+    const doc = await docRef.get()
     if (!doc.exists) {
-      return NextResponse.json({ success: false, message: 'Enrollment not found' }, { status: 404 });
+      return NextResponse.json({ success: false, message: 'Enrollment not found' }, { status: 404 })
     }
 
-    const updates: Record<string, any> = { updatedAt: FieldValue.serverTimestamp() };
-    if (status) updates.status = status;
-    if (paymentStatus) updates.paymentStatus = paymentStatus;
+    const updates: Record<string, any> = { updatedAt: FieldValue.serverTimestamp() }
+    if (status) updates.status = status
+    if (paymentStatus) updates.paymentStatus = paymentStatus
 
-    await docRef.update(updates);
-    const updated = docToObj(await docRef.get());
+    await docRef.update(updates)
+    const updated = docToObj(await docRef.get())
 
-    return NextResponse.json({ success: true, enrollment: updated });
+    return NextResponse.json({ success: true, enrollment: updated })
   } catch (error) {
-    return handleApiError(error);
+    return handleApiError(error)
   }
 }

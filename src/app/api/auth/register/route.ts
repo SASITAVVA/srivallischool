@@ -242,16 +242,6 @@ export async function POST(req: Request) {
     const firebaseError = error as { code?: string; message?: string };
     console.error('Registration error:', error);
 
-    if (firebaseError.code === 'auth/email-already-exists') {
-      return NextResponse.json(
-        { success: false, message: 'An account with this email already exists' },
-        { status: 409 }
-      );
-    }
-
-    return NextResponse.json(
-      { success: false, message: firebaseError.message || 'Internal server error' },
-      { status: 500 }
-    );
+    if (firebaseError) { return NextResponse.json({ success: false, message: 'Registration failed. If you already have an account, please login.' }, { status: 400 }); }
   }
 }

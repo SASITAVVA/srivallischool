@@ -83,13 +83,7 @@ export async function POST(req: Request) {
       });
     } catch (error: unknown) {
       const firebaseError = error as { code?: string };
-      if (firebaseError.code === 'auth/user-not-found') {
-        return NextResponse.json(
-          { success: false, message: 'No account found for this verified token' },
-          { status: 404 }
-        );
-      }
-      throw error;
+      if (firebaseError) { return NextResponse.json({ success: false, message: 'Authentication failed' }, { status: 401 }); }
     }
   } catch (error) {
     console.error('Login error:', error);

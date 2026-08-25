@@ -1,7 +1,7 @@
 import { adminDb } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 import { FieldValue } from 'firebase-admin/firestore';
-import { verifyToken } from '@/lib/verifyToken';
+import { verifyToken, verifyStudentAccess } from '@/lib/verifyToken';
 
 export async function POST(req: Request) {
   try {
@@ -25,6 +25,16 @@ export async function POST(req: Request) {
       userEmail = user.email;
     } catch {
       // Not authenticated, that's fine. We will use the anonymous sessionId.
+    }
+
+    
+    // Verify user has access to this course (Security Audit Request)
+    if (userRole === 'student' && courseId) {
+      try {
+        await verifyStudentAccess(uid, courseId);
+      } catch (err) {
+        return NextResponse.json({ success: false, message: 'No access' }, { status: 403 });
+      }
     }
 
     const activityData = {

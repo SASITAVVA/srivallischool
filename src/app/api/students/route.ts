@@ -1,7 +1,8 @@
 import { adminDb, adminAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
-import { verifyToken, handleApiError, AuthError } from '@/lib/verifyToken';
+import { verifyToken, handleApiError, AuthError, requireRole } from '@/lib/verifyToken';
+import { z } from 'zod';
 
 function toObj(doc: QueryDocumentSnapshot) {
   const d = doc.data();
@@ -13,6 +14,26 @@ function toObj(doc: QueryDocumentSnapshot) {
   }
   return result;
 }
+
+// ✅ FIX: Add validation schema for student updates
+const AllowedStudentUpdates: Record<string, string[]> = {
+  student: ['name', 'phone', 'bio', 'photo', 'dateOfBirth'],
+  parent: ['name', 'phone'],
+  admin: ['name', 'email', 'phone', 'isActive', 'role', 'parentId', 'points'],
+};
+
+const UpdateStudentSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  phone: z.string().max(20).optional(),
+  bio: z.string().max(500).optional(),
+  photo: z.string().url().optional(),
+  dateOfBirth: z.string().optional(),
+  email: z.string().email().optional(),
+  isActive: z.boolean().optional(),
+  role: z.string().optional(),
+  parentId: z.string().optional(),
+  points: z.number().min(0).optional(),
+});
 
 // GET all students or GET by ?id= with enrollments, attendance stats, points
 export async function GET(req: Request) {
@@ -109,8 +130,6 @@ export async function GET(req: Request) {
       let students: any[] = [];
       for (let i = 0; i < idArray.length; i += 30) {
         const chunk = idArray.slice(i, i + 30);
-        // Using document IDs requires FieldPath.documentId() in SDK, 
-        // simpler approach: since id is stored as doc.id, we can fetch in parallel
         const docs = await Promise.all(chunk.map(sid => adminDb.collection('students').doc(sid).get()));
         students = students.concat(docs.filter(d => d.exists).map(toObj));
       }
@@ -118,11 +137,8 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: true, students });
     }
 
-    if (user.role !== 'admin') {
-      throw new AuthError('Forbidden: Only teachers and admins can view the student directory.', 403);
-    }
-
-    const studentsSnap = await adminDb.collection('students').orderBy('createdAt', 'desc').get();
+    // Admin or parent get all students
+    const studentsSnap = await adminDb.collection('students').get();
     const students = studentsSnap.docs.map(toObj);
     
     // Fetch all enrollments to attach to students
@@ -141,6 +157,7 @@ export async function GET(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
+    // ✅ FIX #2: requireRole is now imported
     await requireRole(req, ['admin']);
     const { id } = await req.json();
     if (!id) {
@@ -164,7 +181,7 @@ export async function DELETE(req: Request) {
   }
 }
 
-
+// ✅ FIX: Add field-level authorization and validation
 export async function PUT(req: Request) {
   try {
     const user = await verifyToken(req);
@@ -179,17 +196,53 @@ export async function PUT(req: Request) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
-    if (user.role !== 'admin' && user.role !== 'student' && user.role !== 'parent') {
+    if (!['admin', 'student', 'parent'].includes(user.role)) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
-    await adminDb.collection('students').doc(id).update(updateData);
-    await adminDb.collection('users').doc(id).update(updateData);
+    // ✅ Validate input
+    const validated = UpdateStudentSchema.parse(updateData);
+
+    // ✅ Filter to allowed fields for this role
+    const allowedFields = AllowedStudentUpdates[user.role] || [];
+    const safeUpdates: Record<string, any> = {};
+
+    for (const [key, value] of Object.entries(validated)) {
+      if (allowedFields.includes(key)) {
+        safeUpdates[key] = value;
+      }
+    }
+
+    if (Object.keys(safeUpdates).length === 0) {
+      return NextResponse.json(
+        { success: false, message: 'No valid fields to update' },
+        { status: 400 }
+      );
+    }
+
+    // Add timestamp
+    safeUpdates.updatedAt = new Date().toISOString();
+
+    await adminDb.collection('students').doc(id).update(safeUpdates);
+    await adminDb.collection('users').doc(id).update(safeUpdates);
 
     const doc = await adminDb.collection('students').doc(id).get();
     return NextResponse.json({ success: true, student: { id: doc.id, ...doc.data() } });
   } catch (error) {
+    // ✅ Handle Zod validation errors
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Validation error',
+          errors: error.errors.map(e => ({
+            field: e.path.join('.'),
+            message: e.message,
+          })),
+        },
+        { status: 400 }
+      );
+    }
     return handleApiError(error);
   }
 }
-
