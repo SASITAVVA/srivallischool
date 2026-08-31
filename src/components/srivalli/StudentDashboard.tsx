@@ -838,7 +838,7 @@ export function StudentClasses() {
 
   useEffect(() => { const cleanup = fetchClasses(); return () => { cleanup?.(); }; }, [fetchClasses]);
 
-  const liveClasses = classes.filter(c => c.status === 'scheduled' && isFuture(c.date));
+  const liveClasses = classes.filter(c => c.status === 'live' || (c.status === 'scheduled' && (isFuture(c.date) || isToday(c.date))));
   const recordedClasses = classes.filter(c => c.status === 'completed');
 
   const ClassCard = ({ cls }: { cls: ClassItem }) => (
