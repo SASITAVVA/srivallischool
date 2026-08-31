@@ -177,7 +177,7 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json({ success: true, message: 'Student deleted successfully' });
   } catch (error) {
-    return handleApiError(error);
+    return NextResponse.json({ success: false, message: 'Internal server error', error: String(error), stack: error?.stack }, { status: 500 });
   }
 }
 
@@ -243,6 +243,6 @@ export async function PUT(req: Request) {
         { status: 400 }
       );
     }
-    return handleApiError(error);
+    return NextResponse.json({ success: false, message: 'Internal server error', error: String(error), stack: error?.stack }, { status: 500 });
   }
 }
