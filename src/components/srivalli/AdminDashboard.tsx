@@ -79,7 +79,19 @@ const formatTime = (t: string) => {
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
 const fetchApi = async (url: string, init?: RequestInit) => {
-  const token = useAppStore.getState().idToken;
+  let token = useAppStore.getState().idToken;
+  
+  // Attempt to get a fresh token if Firebase auth is initialized
+  // This solves the "Missing or invalid Authorization header" error when tokens expire
+  if (auth?.currentUser) {
+    try {
+      token = await auth.currentUser.getIdToken(true);
+      useAppStore.getState().setIdToken(token);
+    } catch (e) {
+      console.warn('Failed to refresh token', e);
+    }
+  }
+
   const res = await fetch(url, {
     ...init,
     headers: {
@@ -87,13 +99,16 @@ const fetchApi = async (url: string, init?: RequestInit) => {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
-  const data = await res.json().catch(() => ({}));
+  
+  let data = {};
+  try {
+    data = await res.json();
+  } catch (e) {
+    // ignore json parse error
+  }
   
   if (!res.ok || !data.success) {
-    if (res.status === 401 || res.status === 403) {
-      useAppStore.getState().logout();
-      throw new Error(data.message || 'Unauthorized access. You have been logged out.');
-    }
+    // We throw the error so the calling component can display it in a toast
     throw new Error(data.message || 'API Error');
   }
   return data;
