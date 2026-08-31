@@ -819,24 +819,8 @@ export function StudentCourses() {
 
 export function StudentClasses() {
   const user = useAppStore(s => s.user);
-  const [classes, setClasses] = useState<ClassItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchClasses = useCallback(() => {
-    let cancelled = false;
-    setLoading(true);
-    const load = async () => {
-      try {
-        const res = await fetchWithAuth(`/api/classes?studentId=${user?.id || ''}`);
-        const d = await res.json();
-        if (!cancelled && d.success) setClasses(d.classes || []);
-      } catch {} finally { if (!cancelled) setLoading(false); }
-    };
-    load();
-    return () => { cancelled = true; };
-  }, [user]);
-
-  useEffect(() => { const cleanup = fetchClasses(); return () => { cleanup?.(); }; }, [fetchClasses]);
+  const studentId = user?.id || '';
+  const { classes, loading } = useRealtimeStudent(studentId);
 
   const liveClasses = classes.filter(c => c.status === 'live' || (c.status === 'scheduled' && (isFuture(c.date) || isToday(c.date))));
   const recordedClasses = classes.filter(c => c.status === 'completed');
