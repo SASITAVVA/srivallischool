@@ -275,7 +275,14 @@ export async function DELETE(req: Request) {
   try {
     const user = await verifyToken(req)
     await requireRole(req, ['admin', 'teacher'])
-    const { id } = await req.json()
+    const { searchParams } = new URL(req.url);
+    let id = searchParams.get('id');
+    if (!id) {
+      try {
+        const body = await req.json();
+        id = body.id;
+      } catch (e) {}
+    }
 
     if (!id) {
       return NextResponse.json({ success: false, message: 'Class ID is required' }, { status: 400 })

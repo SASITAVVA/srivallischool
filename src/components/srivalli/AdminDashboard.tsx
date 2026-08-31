@@ -665,13 +665,7 @@ export function AdminStudents() {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      const data = await fetchApi(`/api/students`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id: deleteId })
-      });
+      const data = await fetchApi(`/api/students?id=${deleteId}`, { method: 'DELETE' });
       if (data && data.success) {
         addToast('Student deleted successfully');
         setStudents(prev => prev.filter(s => s.id !== deleteId));
@@ -687,11 +681,7 @@ export function AdminStudents() {
   const handleDeleteEnrollment = async () => {
     if (!deleteEnrollmentId) return;
     try {
-      const data = await fetchApi('/api/enrollments', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: deleteEnrollmentId })
-      });
+      const data = await fetchApi(`/api/enrollments?id=${deleteEnrollmentId}`, { method: 'DELETE' });
       if (data.success) {
         addToast('Enrollment deleted successfully');
         if (studentDetail.student) {
@@ -1070,14 +1060,7 @@ export function AdminParents() {
   const handleDeleteParent = async () => {
     if (!deleteParentId) return;
     try {
-      const data = await fetchApi('/api/parents', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
-        },
-        body: JSON.stringify({ id: deleteParentId })
-      });
+      const data = await fetchApi(`/api/parents?id=${deleteParentId}`, { method: 'DELETE' });
       if (data.success) {
         addToast('Parent deleted successfully');
         setParents(prev => prev.filter(p => p.id !== deleteParentId));
@@ -1095,11 +1078,7 @@ export function AdminParents() {
   const handleDeletePayment = async () => {
     if (!deletePaymentId) return;
     try {
-      const data = await fetchApi('/api/payments', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: deletePaymentId })
-      });
+      const data = await fetchApi(`/api/payments?id=${deletePaymentId}`, { method: 'DELETE' });
       if (data.success) {
         addToast('Payment deleted successfully');
         if (parentPayments) {
@@ -1357,14 +1336,7 @@ export function AdminTeachers() {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      const data = await fetchApi('/api/teachers', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
-        },
-        body: JSON.stringify({ id: deleteId })
-      });
+      const data = await fetchApi(`/api/teachers?id=${deleteId}`, { method: 'DELETE' });
       if (data.success) {
         addToast('Teacher deleted');
         setTeachers(prev => prev.filter(t => t.id !== deleteId));
@@ -1634,11 +1606,7 @@ export function AdminCourses() {
   const handleDeleteCourse = async () => {
     if (!deleteCourseId) return;
     try {
-      const data = await fetchApi('/api/courses', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: deleteCourseId })
-      });
+      const data = await fetchApi(`/api/courses?id=${deleteCourseId}`, { method: 'DELETE' });
       if (data.success) {
         addToast('Course deleted successfully');
         loadCourses();
@@ -2213,11 +2181,7 @@ export function AdminDemoRequests() {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      const data = await fetchApi('/api/demo-request', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: deleteId })
-      });
+      const data = await fetchApi(`/api/demo-request?id=${deleteId}`, { method: 'DELETE' });
       if (data.success) {
         addToast('Request deleted successfully');
         setRequests(prev => prev.filter(r => r.id !== deleteId));
