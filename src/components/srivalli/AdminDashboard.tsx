@@ -146,7 +146,6 @@ const sidebarNavItems: NavItem[] = [
   { label: 'Courses', icon: <BookOpen size={20} />, screen: 'ADMIN_COURSES' },
   { label: 'Payments', icon: <CreditCard size={20} />, screen: 'ADMIN_PAYMENTS' },
   { label: 'Demo Requests', icon: <CalendarCheck size={20} />, screen: 'ADMIN_DEMO_REQUESTS' },
-  { label: 'Activity', icon: <Activity size={20} />, screen: 'ADMIN_ACTIVITY' },
   { label: 'Reports', icon: <BarChart3 size={20} />, screen: 'ADMIN_REPORTS' },
   { label: 'Settings', icon: <Settings size={20} />, screen: 'ADMIN_SETTINGS' },
   { label: 'Teacher Assignments', icon: <UserCheck size={20} />, screen: 'ADMIN_TEACHER_ASSIGNMENTS' },
