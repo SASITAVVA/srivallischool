@@ -602,6 +602,7 @@ export function AdminDashMain() {
 
 export function AdminStudents() {
   const [students, setStudents] = useState<Array<Record<string, unknown>>>([]);
+  const [courses, setCourses] = useState<Array<Record<string, unknown>>>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [gradeFilter, setGradeFilter] = useState('all');
