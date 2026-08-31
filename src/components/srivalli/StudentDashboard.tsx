@@ -291,7 +291,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 }
 
 export function StudentLayout({ children }: { children: ReactNode }) {
-
+  const user = useAppStore(s => s.user);
   const [profileLoading, setProfileLoading] = useState(true);
   const [isInactive, setIsInactive] = useState(false);
 
