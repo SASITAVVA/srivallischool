@@ -70,7 +70,7 @@ import {
   AdminReports,
   AdminSettings,
   AdminTeacherAssignments,
-  AdminActivity,
+  
 } from '@/components/srivalli/AdminDashboard';
 
 function PublicScreen({ screen }: { screen: Screen }) {
@@ -145,7 +145,7 @@ function AdminScreen({ screen }: { screen: Screen }) {
       case 'ADMIN_COURSES': return <AdminCourses />;
       case 'ADMIN_PAYMENTS': return <AdminPayments />;
       case 'ADMIN_DEMO_REQUESTS': return <AdminDemoRequests />;
-      case 'ADMIN_ACTIVITY': return <AdminActivity />;
+      
       case 'ADMIN_REPORTS': return <AdminReports />;
       case 'ADMIN_SETTINGS': return <AdminSettings />;
       case 'ADMIN_TEACHER_ASSIGNMENTS': return <AdminTeacherAssignments />;

@@ -40,6 +40,7 @@ import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from '@/components/ui/accordion';
 import { useAppStore, type Screen } from '@/lib/store';
+import { auth } from '@/lib/firebase';
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    HELPERS
@@ -85,7 +86,7 @@ const fetchApi = async (url: string, init?: RequestInit) => {
   // This solves the "Missing or invalid Authorization header" error when tokens expire
   if (auth?.currentUser) {
     try {
-      token = await auth.currentUser.getIdToken(true);
+      token = await auth.currentUser.getIdToken();
       useAppStore.getState().setIdToken(token);
     } catch (e) {
       console.warn('Failed to refresh token', e);
