@@ -2084,7 +2084,7 @@ export function StudentVideoSubmissions() {
     try {
       const [vRes, cRes] = await Promise.all([
         fetchWithAuth('/api/student-videos'),
-        fetchWithAuth('/api/student-courses')
+        fetchWithAuth('/api/courses')
       ]);
       const vData = await vRes.json();
       const cData = await cRes.json();
@@ -2092,8 +2092,7 @@ export function StudentVideoSubmissions() {
       if (vData.success) setVideos(vData.videos);
       if (cData.success) {
         // extract courses from enrollments
-        const enrolledCourses = cData.enrollments?.map((e: any) => e.course).filter(Boolean) || [];
-        setCourses(enrolledCourses);
+        setCourses(cData.courses || []);
       }
     } catch {
       addToast('Failed to load data', 'error');
