@@ -292,6 +292,23 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
 export function StudentLayout({ children }: { children: ReactNode }) {
   const user = useAppStore(s => s.user);
+  const screen = useAppStore(s => s.screen);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const pageTitle = useMemo(() => {
+    const titles: Record<string, string> = {
+      STUDENT_DASHBOARD: 'Dashboard',
+      STUDENT_COURSES: 'My Courses',
+      STUDENT_CLASSES: 'Classes',
+      STUDENT_ASSIGNMENTS: 'Assignments',
+      STUDENT_QUIZZES: 'Quizzes',
+      STUDENT_MATERIALS: 'Materials',
+      STUDENT_PROGRESS: 'Progress',
+      STUDENT_CERTIFICATES: 'Certificates',
+      STUDENT_LEADERBOARD: 'Leaderboard',
+      STUDENT_PROFILE: 'Profile',
+    };
+    return titles[screen] || 'Dashboard';
+  }, [screen]);
   const [profileLoading, setProfileLoading] = useState(true);
   const [isInactive, setIsInactive] = useState(false);
 
@@ -334,24 +351,7 @@ export function StudentLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  const user = useAppStore(s => s.user);
-  const screen = useAppStore(s => s.screen);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const pageTitle = useMemo(() => {
-    const titles: Record<string, string> = {
-      STUDENT_DASHBOARD: 'Dashboard',
-      STUDENT_COURSES: 'My Courses',
-      STUDENT_CLASSES: 'Classes',
-      STUDENT_ASSIGNMENTS: 'Assignments',
-      STUDENT_QUIZZES: 'Quizzes',
-      STUDENT_MATERIALS: 'Materials',
-      STUDENT_PROGRESS: 'Progress',
-      STUDENT_CERTIFICATES: 'Certificates',
-      STUDENT_LEADERBOARD: 'Leaderboard',
-      STUDENT_PROFILE: 'Profile',
-    };
-    return titles[screen] || 'Dashboard';
-  }, [screen]);
+
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
