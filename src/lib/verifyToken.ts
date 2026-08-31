@@ -64,9 +64,12 @@ export class AuthError extends Error {
 /**
  * Helper to handle errors in API routes
  */
-export function handleApiError(error: unknown) {
+export function handleApiError(error: any) {
   if (error instanceof AuthError) {
     return NextResponse.json({ success: false, message: error.message }, { status: error.status });
+  }
+  if (error && error.code && typeof error.code === 'string' && error.code.startsWith('auth/')) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 400 });
   }
   console.error('API Error:', error);
   return NextResponse.json({ success: false, message: 'Internal server error', error: String(error), stack: error?.stack }, { status: 500 });
