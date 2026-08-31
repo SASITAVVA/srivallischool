@@ -1,7 +1,7 @@
 import { adminDb, adminAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
-import { verifyToken, handleApiError, AuthError } from '@/lib/verifyToken';
+import { verifyToken, requireRole, handleApiError, AuthError } from '@/lib/verifyToken';
 
 function toObj(doc: QueryDocumentSnapshot) {
   const d = doc.data();

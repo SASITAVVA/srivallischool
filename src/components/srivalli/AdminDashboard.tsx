@@ -3215,7 +3215,7 @@ export function AdminTeacherAssignments() {
             </Button>
             <Button
               onClick={handleCreate}
-              disabled={submitting || !form.teacherId || !form.studentId}
+              disabled={submitting || !form.teacherId || form.courseIds.length === 0}
               className="gradient-pink text-white shadow-md rounded-xl gap-2"
             >
               {submitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
