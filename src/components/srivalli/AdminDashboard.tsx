@@ -780,6 +780,7 @@ export function AdminStudents() {
                   <div className="min-w-0 col-span-2 sm:col-span-1">
                     <p className="text-sm font-medium truncate">{String(s.name)}</p>
                     <p className="text-xs text-muted-foreground truncate">{String(s.email || 'No email')}</p>
+                    {s.enrollmentId && <p className="text-[10px] text-srivalli-primary font-mono mt-0.5">{String(s.enrollmentId)}</p>}
                   </div>
                   <div className="hidden sm:block">
                     <p className="text-xs text-muted-foreground">Status</p>
@@ -857,7 +858,8 @@ export function AdminStudents() {
                 {/* Basic Info */}
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: 'Email', value: String(studentDetail.student?.email || '—') },
+                    { label: 'Enrollment ID', value: String(studentDetail.student?.enrollmentId || 'N/A') },
+                      { label: 'Email', value: String(studentDetail.student?.email || '—') },
                     { label: 'Age', value: String(studentDetail.student?.age || '—') },
                     { label: 'Grade', value: String(studentDetail.student?.grade || '—') },
                     { label: 'School', value: String(studentDetail.student?.schoolName || '—') },

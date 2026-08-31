@@ -2,6 +2,12 @@ import { adminAuth, adminDb } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 import { FieldValue } from 'firebase-admin/firestore';
 
+function generateEnrollmentId() {
+  const year = new Date().getFullYear();
+  const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `SS-${year}-${randomStr}`;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -55,8 +61,10 @@ export async function POST(req: Request) {
       // If child info was provided, create the child profile
       if (childName) {
         const childId = adminDb.collection('students').doc().id;
+        const enrollmentId = generateEnrollmentId();
         
         await adminDb.collection('students').doc(childId).set({
+          enrollmentId,
           name: childName,
           age: childAge ? parseInt(childAge) : null,
           grade: childGrade ? parseInt(childGrade) : null,
@@ -147,7 +155,9 @@ export async function POST(req: Request) {
     await adminAuth.setCustomUserClaims(userRecord.uid, { role: 'student' });
 
     // Create student profile in Firestore
+    const enrollmentId = generateEnrollmentId();
     const studentData: Record<string, unknown> = {
+      enrollmentId,
       name,
       email,
       dateOfBirth: dateOfBirth || '',
