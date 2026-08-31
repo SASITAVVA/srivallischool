@@ -716,7 +716,7 @@ export function TeacherStudents() {
     }
     if (courseFilter !== 'all') {
       result = result.filter(s =>
-        s.enrollments?.some(e => e.course?.id === courseFilter && e.status === 'active')
+        s.enrollments?.some(e => e.courseId === courseFilter && e.status === 'active')
       );
     }
     return result;

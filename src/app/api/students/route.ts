@@ -99,45 +99,7 @@ export async function GET(req: Request) {
       });
     }
 
-    // Get all students
-    if (user.role === 'teacher') {
-      // 1. Get courses assigned to this teacher
-      const assignmentsSnap = await adminDb.collection('teacherAssignments').where('teacherId', '==', user.uid).get();
-      const courseIds = [...new Set(assignmentsSnap.docs.flatMap(d => d.data().courseIds || []).filter(Boolean))];
-      
-      if (courseIds.length === 0) {
-        return NextResponse.json({ success: true, students: [] });
-      }
-
-      // 2. Get active enrollments for these courses
-      const studentIds = new Set<string>();
-      // Firestore 'in' queries support max 30 items
-      for (let i = 0; i < courseIds.length; i += 30) {
-        const chunk = courseIds.slice(i, i + 30);
-        const enrollmentsSnap = await adminDb.collection('enrollments')
-          .where('courseId', 'in', chunk)
-          .where('status', '==', 'active')
-          .get();
-        enrollmentsSnap.docs.forEach(d => studentIds.add(d.data().studentId));
-      }
-
-      const idArray = Array.from(studentIds);
-      if (idArray.length === 0) {
-        return NextResponse.json({ success: true, students: [] });
-      }
-
-      // 3. Fetch the students
-      let students: any[] = [];
-      for (let i = 0; i < idArray.length; i += 30) {
-        const chunk = idArray.slice(i, i + 30);
-        const docs = await Promise.all(chunk.map(sid => adminDb.collection('students').doc(sid).get()));
-        students = students.concat(docs.filter(d => d.exists).map(toObj));
-      }
-
-      return NextResponse.json({ success: true, students });
-    }
-
-    // Admin or parent get all students
+    // Admin, parent, or teacher get all students
     const studentsSnap = await adminDb.collection('students').get();
     const students = studentsSnap.docs.map(toObj);
     
