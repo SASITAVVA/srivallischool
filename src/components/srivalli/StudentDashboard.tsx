@@ -10,7 +10,7 @@ import {
   Flame, Medal, Crown, ArrowUpRight, ArrowDown, Loader2,
   X, ChevronDown, Calendar, TrendingUp, Lock, Unlock,
   RotateCcw, Send, Sparkles, Heart, PenTool, Mic, Globe,
-  Lightbulb, Users, Shield, MessageCircle, Mail
+  Lightbulb, Users, Shield, MessageCircle, Mail, Plus, ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
