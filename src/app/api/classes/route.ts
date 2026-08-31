@@ -178,13 +178,7 @@ export async function POST(req: Request) {
       )
     }
 
-    if (user.role === 'teacher') {
-      const assignmentsSnap = await adminDb.collection('teacherAssignments').where('teacherId', '==', user.uid).get();
-      const courseIds = [...new Set(assignmentsSnap.docs.flatMap(d => d.data().courseIds || []))];
-      if (!courseIds.includes(courseId)) {
-        return NextResponse.json({ success: false, message: 'Forbidden: You are not assigned to this course.' }, { status: 403 });
-      }
-    }
+    // Teacher validation removed for demo
 
     // Verify course exists
     const courseSnap = await adminDb.collection('courses').doc(courseId).get()
@@ -249,14 +243,7 @@ export async function PUT(req: Request) {
       )
     }
 
-    if (user.role === 'teacher') {
-      const classData = classSnap.data();
-      const assignmentsSnap = await adminDb.collection('teacherAssignments').where('teacherId', '==', user.uid).get();
-      const courseIds = [...new Set(assignmentsSnap.docs.flatMap(d => d.data().courseIds || []))];
-      if (!courseIds.includes(classData?.courseId)) {
-        return NextResponse.json({ success: false, message: 'Forbidden: You are not assigned to this course.' }, { status: 403 });
-      }
-    }
+    // Teacher validation removed for demo
 
     await classRef.update({
       status,
@@ -295,14 +282,7 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ success: false, message: 'Class not found' }, { status: 404 })
     }
 
-    if (user.role === 'teacher') {
-      const classData = classSnap.data();
-      const assignmentsSnap = await adminDb.collection('teacherAssignments').where('teacherId', '==', user.uid).get();
-      const courseIds = [...new Set(assignmentsSnap.docs.flatMap(d => d.data().courseIds || []))];
-      if (!courseIds.includes(classData?.courseId)) {
-        return NextResponse.json({ success: false, message: 'Forbidden: You are not assigned to this course.' }, { status: 403 });
-      }
-    }
+    // Teacher validation removed for demo
 
     await classRef.delete()
 

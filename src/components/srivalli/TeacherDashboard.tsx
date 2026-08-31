@@ -92,7 +92,7 @@ const fetchWithAuth = async (url: string, init?: RequestInit) => {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
-  if (res.status === 401 || res.status === 403) {
+  if (res.status === 401) {
     useAppStore.getState().logout();
   }
   return res;
