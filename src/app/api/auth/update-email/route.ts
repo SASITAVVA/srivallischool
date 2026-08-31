@@ -46,8 +46,22 @@ export async function POST(req: Request) {
     // Password verified, update email in Firebase Auth
     await adminAuth.updateUser(uid, { email: newEmail })
 
-    // Update email in Firestore
+        // Update email in Firestore
     await adminDb.collection('users').doc(uid).update({ email: newEmail })
+
+    // Also update role-specific collection
+    let roleCollection = '';
+    if (userData.role === 'admin') roleCollection = 'admins';
+    else if (userData.role === 'teacher') roleCollection = 'teachers';
+    else if (userData.role === 'parent') roleCollection = 'parents';
+    else if (userData.role === 'student') roleCollection = 'students';
+    
+    if (roleCollection) {
+      const roleDoc = await adminDb.collection(roleCollection).doc(uid).get();
+      if (roleDoc.exists) {
+        await adminDb.collection(roleCollection).doc(uid).update({ email: newEmail });
+      }
+    }
 
     return NextResponse.json({ success: true, message: 'Email updated successfully' })
   } catch (error: any) {
