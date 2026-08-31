@@ -2227,7 +2227,7 @@ export function StudentVideoSubmissions() {
                 <SelectTrigger className="rounded-xl">
                   <SelectValue placeholder="Select course" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-60">
                   {courses.map(c => (
                     <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
                   ))}
