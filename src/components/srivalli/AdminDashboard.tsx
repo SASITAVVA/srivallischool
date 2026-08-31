@@ -1490,7 +1490,7 @@ export function AdminCourses() {
   const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
   const [form, setForm] = useState({
     title: '', description: '', tagline: '', weeklyFee: '', monthlyFee: '',
-    category: '', topics: '[]', activities: '[]',
+    category: '', topics: '', activities: '',
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -1536,12 +1536,14 @@ export function AdminCourses() {
           ...form,
           weeklyFee: parseInt(form.weeklyFee) || 0,
           monthlyFee: parseInt(form.monthlyFee) || 0,
+            topics: form.topics ? form.topics.split(',').map(s => s.trim()).filter(Boolean) : [],
+            activities: form.activities ? form.activities.split(',').map(s => s.trim()).filter(Boolean) : [],
         }),
       });
       if (data.success) {
         addToast('Course created successfully');
         setShowAddDialog(false);
-        setForm({ title: '', description: '', tagline: '', weeklyFee: '', monthlyFee: '', category: '', topics: '[]', activities: '[]' });
+        setForm({ title: '', description: '', tagline: '', weeklyFee: '', monthlyFee: '', category: '', topics: '', activities: '' });
         loadCourses();
       } else {
         addToast(data.message || 'Failed to create course', 'error');
@@ -1555,21 +1557,12 @@ export function AdminCourses() {
 
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editCourseId, setEditCourseId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({
-    title: '', description: '', tagline: '', weeklyFee: '', monthlyFee: '', category: ''
-  });
+  const [editForm, setEditForm] = useState({ title: '', description: '', tagline: '', weeklyFee: '', monthlyFee: '', category: '', topics: '', activities: '' });
   const [deleteCourseId, setDeleteCourseId] = useState<string | null>(null);
 
   const openEditDialog = (course: Record<string, unknown>) => {
     setEditCourseId(String(course.id));
-    setEditForm({
-      title: String(course.title || ''),
-      description: String(course.description || ''),
-      tagline: String(course.tagline || ''),
-      weeklyFee: String(course.weeklyFee || ''),
-      monthlyFee: String(course.monthlyFee || ''),
-      category: String(course.category || ''),
-    });
+    setEditForm({ title: String(course.title || ''), description: String(course.description || ''), tagline: String(course.tagline || ''), weeklyFee: String(course.weeklyFee || ''), monthlyFee: String(course.monthlyFee || ''), category: String(course.category || ''), topics: Array.isArray(course.topics) ? course.topics.join(', ') : '', activities: Array.isArray(course.activities) ? course.activities.join(', ') : '' });
     setShowEditDialog(true);
   };
 
@@ -1586,9 +1579,7 @@ export function AdminCourses() {
         body: JSON.stringify({
           id: editCourseId,
           ...editForm,
-          weeklyFee: parseInt(editForm.weeklyFee) || 0,
-          monthlyFee: parseInt(editForm.monthlyFee) || 0,
-        }),
+          weeklyFee: parseInt(editForm.weeklyFee) || 0, monthlyFee: parseInt(editForm.monthlyFee) || 0, topics: editForm.topics ? editForm.topics.split(',').map(s => s.trim()).filter(Boolean) : [], activities: editForm.activities ? editForm.activities.split(',').map(s => s.trim()).filter(Boolean) : [] }),
       });
       if (data.success) {
         addToast('Course updated successfully');
@@ -1798,12 +1789,12 @@ export function AdminCourses() {
                 <Input placeholder="e.g., academic, creative, coding" value={form.category} onChange={(e) => setForm(f => ({ ...f, category: e.target.value }))} />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Topics (JSON array)</Label>
-                <Textarea placeholder='["Topic 1", "Topic 2"]' rows={2} value={form.topics} onChange={(e) => setForm(f => ({ ...f, topics: e.target.value }))} />
+                <Label className="text-xs">Topics (comma-separated)</Label>
+                <Textarea placeholder="Public Speaking, Debating, Pronunciation" rows={2} value={form.topics} onChange={(e) => setForm(f => ({ ...f, topics: e.target.value }))} />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Activities (JSON array)</Label>
-                <Textarea placeholder='["Activity 1", "Activity 2"]' rows={2} value={form.activities} onChange={(e) => setForm(f => ({ ...f, activities: e.target.value }))} />
+                <Label className="text-xs">Activities (comma-separated)</Label>
+                <Textarea placeholder="Group Discussions, Roleplay, Speeches" rows={2} value={form.activities} onChange={(e) => setForm(f => ({ ...f, activities: e.target.value }))} />
               </div>
             </div>
           </ScrollArea>
@@ -1851,6 +1842,14 @@ export function AdminCourses() {
               <div className="space-y-1">
                 <Label className="text-xs">Category</Label>
                 <Input placeholder="e.g., academic, creative, coding" value={editForm.category} onChange={(e) => setEditForm(f => ({ ...f, category: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Topics (comma-separated)</Label>
+                <Textarea placeholder="Topic 1, Topic 2" rows={2} value={editForm.topics} onChange={(e) => setEditForm(f => ({ ...f, topics: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Activities (comma-separated)</Label>
+                <Textarea placeholder="Activity 1, Activity 2" rows={2} value={editForm.activities} onChange={(e) => setEditForm(f => ({ ...f, activities: e.target.value }))} />
               </div>
             </div>
           </ScrollArea>
