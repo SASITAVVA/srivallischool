@@ -2029,7 +2029,7 @@ export function StudentProfile() {
                 ))}
               </div>
               <Button variant="outline" className="w-full rounded-xl border-srivalli-pink/30 text-srivalli-pink" onClick={() => setEditMode(true)}>
-                âœï¸ Edit Profile
+                <PenTool size={16} className="mr-2" /> Edit Profile
               </Button>
             </div>
           )}
