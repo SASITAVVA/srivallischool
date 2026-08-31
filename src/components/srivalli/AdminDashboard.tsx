@@ -1925,9 +1925,7 @@ export function AdminPayments() {
       } else {
         addToast(data.message || 'Failed to add payment', 'error');
       }
-    } catch {
-      addToast('Error adding payment', 'error');
-    }
+    } catch (err: any) { addToast(err.message || 'Error adding payment', 'error'); }
   };
 
   const feesSummary = feesData.summary as Record<string, unknown> | undefined;

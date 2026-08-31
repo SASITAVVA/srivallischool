@@ -126,20 +126,42 @@ export async function POST(req: Request) {
     }
 
     // Verify enrollment exists
-    const enrollmentDoc = await adminDb.collection('enrollments').doc(enrollmentId).get();
+    let actualEnrollmentId = enrollmentId;
+    let actualParentId = parentId;
+    let enrollmentDoc = await adminDb.collection('enrollments').doc(actualEnrollmentId).get();
+    
+    if (!enrollmentDoc.exists) {
+      // Fallback: Check if they passed a Student's human-readable SS-ID
+      const studentSnap = await adminDb.collection('students').where('enrollmentId', '==', enrollmentId).limit(1).get();
+      if (!studentSnap.empty) {
+        const studentData = studentSnap.docs[0].data();
+        const studentUid = studentData.uid || studentSnap.docs[0].id;
+        const enrollSnap = await adminDb.collection('enrollments').where('studentId', '==', studentUid).limit(1).get();
+        if (!enrollSnap.empty) {
+          enrollmentDoc = enrollSnap.docs[0];
+          actualEnrollmentId = enrollmentDoc.id;
+        }
+      }
+    }
+
     if (!enrollmentDoc.exists) {
       return NextResponse.json(
-        { success: false, message: 'Enrollment not found' },
+        { success: false, message: 'Enrollment or Student ID not found' },
         { status: 404 }
       );
     }
+
+    if (!actualParentId) {
+      actualParentId = enrollmentDoc.data()?.parentId;
+    }
+    actualParentId = actualParentId || user.uid;
 
     // Generate a transaction ID
     const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
     const docRef = await adminDb.collection('payments').add({
-      parentId: parentId || user.uid,
-      enrollmentId,
+      parentId: actualParentId,
+      enrollmentId: actualEnrollmentId,
       amount,
       plan,
       method: method || null,
