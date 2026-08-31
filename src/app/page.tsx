@@ -129,6 +129,7 @@ function TeacherScreen({ screen }: { screen: Screen }) {
       case 'TEACHER_REPORTS': return <TeacherReports />;
       case 'TEACHER_COUNSELLING': return <TeacherCounselling />;
       case 'TEACHER_VIDEO_REVIEWS': return <TeacherVideoReviews />;
+      case 'TEACHER_PROFILE': return <TeacherProfile />;
       case 'TEACHER_DASHBOARD':
       default: return <TeacherDashMain />;
     }

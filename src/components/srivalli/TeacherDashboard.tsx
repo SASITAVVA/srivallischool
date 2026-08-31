@@ -220,7 +220,7 @@ const SIDEBAR_NAV: NavItem[] = [
   { label: 'Reports', icon: <BarChart3 className="w-5 h-5" />, screen: 'TEACHER_REPORTS' },
   { label: 'Counselling', icon: <Heart className="w-5 h-5" />, screen: 'TEACHER_COUNSELLING' },
   { label: 'Video Submissions', icon: <Video className="w-5 h-5" />, screen: 'TEACHER_VIDEO_REVIEWS' },
-  { label: 'Profile', icon: <UserCircle className="w-5 h-5" />, screen: 'TEACHER_DASHBOARD' },
+  { label: 'Profile', icon: <UserCircle className="w-5 h-5" />, screen: 'TEACHER_PROFILE' },
 ];
 
 const BOTTOM_NAV: NavItem[] = [
@@ -228,7 +228,7 @@ const BOTTOM_NAV: NavItem[] = [
   { label: 'Classes', icon: <Video className="w-5 h-5" />, screen: 'TEACHER_CLASSES' },
   { label: 'Tasks', icon: <ClipboardList className="w-5 h-5" />, screen: 'TEACHER_ASSIGNMENTS' },
   { label: 'Quizzes', icon: <Brain className="w-5 h-5" />, screen: 'TEACHER_QUIZZES' },
-  { label: 'Profile', icon: <UserCircle className="w-5 h-5" />, screen: 'TEACHER_DASHBOARD' },
+  { label: 'Profile', icon: <UserCircle className="w-5 h-5" />, screen: 'TEACHER_PROFILE' },
 ];
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
