@@ -511,8 +511,8 @@ export function StudentDashMain() {
 
       {/* Today's Class */}
       {todayClasses.length > 0 && (
-        <Card className="fun-shadow border-0 overflow-hidden">
-          <CardHeader className="bg-srivalli-light-purple pb-3">
+        <Card className="fun-shadow border-0 overflow-hidden bg-srivalli-light-purple/20">
+            <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="p-2 bg-srivalli-purple/10 rounded-xl">
@@ -525,7 +525,7 @@ export function StudentDashMain() {
           </CardHeader>
           <CardContent className="p-4 space-y-3">
             {todayClasses.map(cls => (
-              <div key={cls.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-srivalli-light-purple/30">
+              <div key={cls.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-white/60">
                 <div className="space-y-1">
                   <p className="font-semibold text-sm">{cls.course?.title || cls.title}</p>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
