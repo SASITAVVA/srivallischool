@@ -1532,7 +1532,7 @@ export function StudentProgress() {
       {/* Activity Breakdown */}
       <Card className="fun-shadow border-0">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-bold">Activity Breakdown âš¡</CardTitle>
+          <CardTitle className="text-base font-bold flex items-center gap-2">Activity Breakdown <Zap className="w-5 h-5 text-yellow-500" /></CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 grid sm:grid-cols-3 gap-4">
           {activityBreakdown.map(ab => (
