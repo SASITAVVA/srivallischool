@@ -1645,7 +1645,7 @@ export function StudentLeaderboard() {
   return (
     <div className="space-y-6 bounce-in">
       <div>
-        <h2 className="text-xl font-bold text-foreground">Leaderboard ðŸ†</h2>
+        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">Leaderboard <Trophy className="w-6 h-6 text-yellow-500" /></h2>
         <p className="text-sm text-muted-foreground">See how you rank among your peers</p>
       </div>
 
