@@ -2145,6 +2145,7 @@ export function AdminDemoRequests() {
   const [requests, setRequests] = useState<Array<Record<string, unknown>>>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('All');
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
@@ -2195,9 +2196,14 @@ export function AdminDemoRequests() {
     }
   };
 
-  const getNextStatus = (current: string) => {
-    const idx = demoStatusFlow.indexOf(current);
-    return idx < demoStatusFlow.length - 1 ? demoStatusFlow[idx + 1] : null;
+  const filteredRequests = requests.filter(r => activeTab === 'All' || r.status === activeTab);
+
+  const counts = {
+    All: requests.length,
+    New: requests.filter(r => r.status === 'New').length,
+    Processing: requests.filter(r => r.status === 'Processing').length,
+    Contacted: requests.filter(r => r.status === 'Contacted').length,
+    Completed: requests.filter(r => r.status === 'Completed').length,
   };
 
   return (
@@ -2207,119 +2213,136 @@ export function AdminDemoRequests() {
           <h1 className="text-2xl font-bold text-gradient flex items-center gap-2">
             <CalendarCheck size={24} className="text-srivalli-orange" /> Demo Requests
           </h1>
-          <p className="text-muted-foreground text-sm">{requests.filter(r => r.status === 'New').length} new requests</p>
-        </div>
-        <div className="flex gap-2">
-          <Badge className="bg-srivalli-light-pink text-srivalli-pink px-3 py-1">
-            New: {requests.filter(r => r.status === 'New').length}
-          </Badge>
-          <Badge className="bg-srivalli-light-green text-srivalli-green px-3 py-1">
-            Completed: {requests.filter(r => r.status === 'Completed').length}
-          </Badge>
+          <p className="text-muted-foreground text-sm">Manage new course inquiries</p>
         </div>
       </div>
 
-      {loading ? (
-        <div className="grid gap-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="p-4"><Skeleton className="h-16 w-full" /></Card>
-          ))}
-        </div>
-      ) : requests.length === 0 ? (
-        <Card className="p-12 text-center">
-          <CalendarCheck size={40} className="mx-auto text-muted-foreground/30 mb-3" />
-          <p className="text-muted-foreground">No demo requests yet</p>
-        </Card>
-      ) : (
-        <div className="grid gap-3">
-          {requests.map((req: Record<string, unknown>) => {
-            const nextStatus = getNextStatus(String(req.status));
-            const mobile = String(req.mobile || req.parent?.mobile || '');
-            return (
-              <Card key={String(req.id)} className="p-4 card-hover">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                  <div className="flex-1 min-w-0 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
-                    <div className="col-span-1">
-                      <p className="text-xs text-muted-foreground">Parent</p>
-                      <p className="text-sm font-medium">{String(req.parentName)}</p>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full h-auto mb-4">
+          <TabsTrigger value="All" className="text-xs py-2">All ({counts.All})</TabsTrigger>
+          <TabsTrigger value="New" className="text-xs py-2">New ({counts.New})</TabsTrigger>
+          <TabsTrigger value="Processing" className="text-xs py-2">Processing ({counts.Processing})</TabsTrigger>
+          <TabsTrigger value="Contacted" className="text-xs py-2">Contacted ({counts.Contacted})</TabsTrigger>
+          <TabsTrigger value="Completed" className="text-xs py-2">Completed ({counts.Completed})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={activeTab} className="mt-0">
+          {loading ? (
+            <div className="grid gap-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Card key={i} className="p-4"><Skeleton className="h-16 w-full" /></Card>
+              ))}
+            </div>
+          ) : filteredRequests.length === 0 ? (
+            <Card className="p-12 text-center">
+              <CalendarCheck size={40} className="mx-auto text-muted-foreground/30 mb-3" />
+              <p className="text-muted-foreground">No {activeTab === 'All' ? '' : activeTab.toLowerCase()} demo requests found</p>
+            </Card>
+          ) : (
+            <div className="grid gap-3">
+              {filteredRequests.map((req: Record<string, unknown>) => {
+                const mobile = String(req.mobile || req.parent?.mobile || '');
+                return (
+                  <Card key={String(req.id)} className="p-4 card-hover overflow-visible">
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="flex-1 min-w-0 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Parent</p>
+                          <p className="text-sm font-medium">{String(req.parentName || req.name || 'Unknown')}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Child</p>
+                          <p className="text-sm">
+                            {req.childName ? String(req.childName) : '-'} 
+                            {req.childAge ? ` (${String(req.childAge)}y)` : ''}
+                          </p>
+                        </div>
+                        <div className="hidden lg:block">
+                          <p className="text-xs text-muted-foreground">Preferred Time</p>
+                          <p className="text-sm">
+                            {req.preferredDate ? formatDate(String(req.preferredDate)) : '-'}
+                            {req.preferredTime ? ` - ${formatTime(String(req.preferredTime))}` : ''}
+                          </p>
+                        </div>
+                        <div className="hidden lg:block">
+                          <p className="text-xs text-muted-foreground">Course Interest</p>
+                          <p className="text-sm truncate">{String(req.courseInterest || 'Any')}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+                        <Select 
+                          value={String(req.status || 'New')} 
+                          onValueChange={(val) => updateStatus(String(req.id), val)}
+                        >
+                          <SelectTrigger className="h-8 text-xs w-[130px] border-gray-200">
+                            <SelectValue placeholder="Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="New">
+                              <span className="flex items-center gap-2"><Badge className="bg-srivalli-light-pink text-srivalli-pink w-2 h-2 p-0 rounded-full"></Badge> New</span>
+                            </SelectItem>
+                            <SelectItem value="Processing">
+                              <span className="flex items-center gap-2"><Badge className="bg-srivalli-light-orange text-srivalli-orange w-2 h-2 p-0 rounded-full"></Badge> Processing</span>
+                            </SelectItem>
+                            <SelectItem value="Contacted">
+                              <span className="flex items-center gap-2"><Badge className="bg-srivalli-light-purple text-srivalli-purple w-2 h-2 p-0 rounded-full"></Badge> Contacted</span>
+                            </SelectItem>
+                            <SelectItem value="Completed">
+                              <span className="flex items-center gap-2"><Badge className="bg-srivalli-light-green text-srivalli-green w-2 h-2 p-0 rounded-full"></Badge> Completed</span>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        {mobile && mobile !== 'undefined' && (
+                          <>
+                            <Button size="sm" variant="outline" className="text-xs h-8 gap-1" asChild>
+                              <a href={`tel:${mobile}`}>
+                                <PhoneCall size={12} /> <span className="hidden sm:inline">Call</span>
+                              </a>
+                            </Button>
+                            <Button size="sm" variant="outline" className="text-xs h-8 gap-1" asChild>
+                              <a href={`https://wa.me/${mobile.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
+                                <MessageCircle size={12} /> <span className="hidden sm:inline">WhatsApp</span>
+                              </a>
+                            </Button>
+                          </>
+                        )}
+                        
+                        <AlertDialog open={deleteId === String(req.id)} onOpenChange={(open) => !open && setDeleteId(null)}>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-600" onClick={() => setDeleteId(String(req.id))}>
+                              <Trash2 size={14} />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Request?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this demo request from <strong>{String(req.parentName || req.name || 'Unknown')}</strong>? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </div>
-                    <div className="hidden sm:block">
-                      <p className="text-xs text-muted-foreground">Child</p>
-                      <p className="text-sm">{String(req.childName)} ({String(req.childAge)}y)</p>
-                    </div>
-                    <div className="hidden sm:block">
-                      <p className="text-xs text-muted-foreground">Preferred</p>
-                      <p className="text-sm">{formatDate(String(req.preferredDate || ''))}{req.preferredTime ? ` • ${formatTime(String(req.preferredTime))}` : ''}</p>
-                    </div>
-                    <div className="hidden sm:block">
-                      <p className="text-xs text-muted-foreground">Course Interest</p>
-                      <p className="text-sm truncate">{String(req.courseInterest || 'Any')}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
-                    <Badge className={demoStatusColors[String(req.status)] || 'bg-gray-100 text-gray-600'}>
-                      {String(req.status)}
-                    </Badge>
-                    {/* Status Update */}
-                    {nextStatus && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-xs h-7"
-                        onClick={() => updateStatus(String(req.id), nextStatus)}
-                      >
-                        <Check size={12} className="mr-1" />
-                        {nextStatus.charAt(0).toUpperCase() + nextStatus.slice(1)}
-                      </Button>
+                    {req.message && (
+                      <div className="mt-3 pt-3 border-t border-gray-100 text-sm">
+                        <p className="text-muted-foreground text-xs font-medium mb-1">Message</p>
+                        <p className="text-gray-800 whitespace-pre-wrap">{String(req.message)}</p>
+                      </div>
                     )}
-                    {/* Contact Buttons */}
-                    {mobile && (
-                      <>
-                        <Button size="sm" variant="outline" className="text-xs h-7 gap-1" asChild>
-                          <a href={`tel:${mobile}`}>
-                            <PhoneCall size={12} /> Call
-                          </a>
-                        </Button>
-                        <Button size="sm" variant="outline" className="text-xs h-7 gap-1" asChild>
-                          <a href={`https://wa.me/${mobile.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
-                            <MessageCircle size={12} /> WhatsApp
-                          </a>
-                        </Button>
-                      </>
-                    )}
-                    
-                    <AlertDialog open={deleteId === String(req.id)} onOpenChange={(open) => !open && setDeleteId(null)}>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-400 hover:text-red-600" onClick={() => setDeleteId(String(req.id))}>
-                          <Trash2 size={14} />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Request?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete this demo request from <strong>{String(req.parentName)}</strong>? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
-                {req.message && (
-                  <div className="mt-3 pt-3 border-t border-gray-100 text-sm">
-                    <p className="text-muted-foreground text-xs font-medium mb-1">Message</p>
-                    <p className="text-gray-800 whitespace-pre-wrap">{String(req.message)}</p>
-                  </div>
-                )}
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

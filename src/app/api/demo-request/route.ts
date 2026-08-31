@@ -88,6 +88,11 @@ export async function PUT(req: Request) {
       return NextResponse.json({ success: false, message: 'id and status required' }, { status: 400 });
     }
 
+    const validStatuses = ['New', 'Processing', 'Contacted', 'Completed'];
+    if (!validStatuses.includes(status)) {
+      return NextResponse.json({ success: false, message: 'Invalid status' }, { status: 400 });
+    }
+
     const docRef = adminDb.collection('demoRequests').doc(id);
     const snap = await docRef.get();
     
