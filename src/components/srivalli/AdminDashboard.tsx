@@ -994,7 +994,7 @@ export function AdminStudents() {
                         await fetchApi('/api/enrollments', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ studentId: manageAccessId, courseId: course.id, plan: 'Manual' })
+                          body: JSON.stringify({ studentId: manageAccessId, courseId: course.id, plan: 'monthly' })
                         });
                       }
                       // Refresh data
