@@ -987,7 +987,7 @@ export function AdminStudents() {
                         await fetchApi('/api/enrollments', {
                           method: 'PUT',
                           headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ id: activeEnrollment.id, status: 'revoked' })
+                          body: JSON.stringify({ id: activeEnrollment.id, status: 'cancelled' })
                         });
                       } else {
                         // Grant
