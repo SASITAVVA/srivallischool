@@ -94,7 +94,7 @@ function StudentScreen({ screen }: { screen: Screen }) {
       case 'STUDENT_CLASSES': return <StudentClasses />;
       case 'STUDENT_ASSIGNMENTS': return <StudentAssignments />;
       case 'STUDENT_QUIZZES': return <StudentQuizzes />;
-      case 'STUDENT_MATERIALS': return <StudentProgress />;
+      case 'STUDENT_MATERIALS': return <StudentMaterials />;
       case 'STUDENT_PROGRESS': return <StudentProgress />;
       case 'STUDENT_LEADERBOARD': return <StudentLeaderboard />;
       case 'STUDENT_CERTIFICATES': return <StudentCertificates />;

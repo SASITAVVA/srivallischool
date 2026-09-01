@@ -1407,6 +1407,24 @@ export function StudentQuizzes() {
    7. STUDENT PROGRESS
    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
+
+export function StudentMaterials() {
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800">Learning Materials</h2>
+      </div>
+      <Card>
+        <CardContent className="p-8 text-center text-gray-500">
+          <FolderOpen className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          <p className="text-lg">No materials uploaded yet.</p>
+          <p className="text-sm mt-2">Course documents, PDFs, and reading materials will appear here.</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export function StudentProgress() {
   const user = useAppStore(s => s.user);
   const [enrollments, setEnrollments] = useState<EnrollmentItem[]>([]);
