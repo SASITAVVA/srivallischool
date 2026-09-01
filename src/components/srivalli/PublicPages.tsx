@@ -1294,7 +1294,7 @@ export function RegisterParentPage() {
               <Select required value={form.courseInterest} onValueChange={v => update('courseInterest', v)}>
                 <SelectTrigger aria-label="Select Course Interest"><SelectValue placeholder="Select a course" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Content Writing">âœï¸ Content Writing</SelectItem>
+                  <SelectItem value="Content Writing">✍️ Content Writing</SelectItem>
                   <SelectItem value="Public Speaking">🎤 Public Speaking</SelectItem>
                   <SelectItem value="Storytelling">📖 Storytelling</SelectItem>
                 </SelectContent>
