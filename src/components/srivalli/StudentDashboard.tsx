@@ -1839,7 +1839,7 @@ export function StudentCertificates() {
               <div className="gradient-pink p-4 text-white flex items-center gap-3">
                 <Award className="w-8 h-8" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold truncate">{cert.course?.title || 'Course Certificate'}</p>
+                  <p className="font-bold truncate">{cert.title || cert.course?.title || 'Course Certificate'}</p>
                   <p className="text-xs text-white">Issued: {formatDate(cert.issuedAt)}</p>
                 </div>
               </div>
@@ -1850,26 +1850,27 @@ export function StudentCertificates() {
                   </span>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="flex-1 rounded-xl text-xs" onClick={() => setViewingCert(cert)}>
-                    <Eye className="w-3 h-3 mr-1" /> View
-                  </Button>
-                  <Button size="sm" variant="outline" className="flex-1 rounded-xl text-xs" onClick={() => {
-                    const printWindow = window.open('', '_blank');
-                    if (printWindow) {
-                      printWindow.document.write(`<html><head><title>Certificate - ${cert.certificateCode}</title></head><body style="text-align:center; padding: 50px; font-family: sans-serif;"><h1>Certificate of Completion</h1><p>This certifies completion of</p><h2>${cert.course?.title || 'Course'}</h2><p>Code: ${cert.certificateCode}</p><script>window.print();</script></body></html>`);
-                      printWindow.document.close();
-                    }
-                  }}>
-                    <Download className="w-3 h-3 mr-1" /> Download
-                  </Button>
-                  <Button size="sm" variant="outline" className="flex-1 rounded-xl text-xs" onClick={() => {
-                    navigator.clipboard.writeText(window.location.origin + '/verify/' + cert.certificateCode)
-                      .then(() => addToast('Share link copied!', 'success'))
-                      .catch(() => addToast('Failed to copy', 'error'));
-                  }}>
-                    <Share2 className="w-3 h-3 mr-1" /> Share
-                  </Button>
-                </div>
+                    {cert.certificateUrl ? (
+                      <Button size="sm" className="w-full rounded-xl gradient-pink text-white text-xs" onClick={() => window.open(cert.certificateUrl, '_blank')}>
+                        <ExternalLink className="w-3 h-3 mr-1" /> View Certificate
+                      </Button>
+                    ) : (
+                      <>
+                        <Button size="sm" variant="outline" className="flex-1 rounded-xl text-xs" onClick={() => setViewingCert(cert)}>
+                          <Eye className="w-3 h-3 mr-1" /> View
+                        </Button>
+                        <Button size="sm" variant="outline" className="flex-1 rounded-xl text-xs" onClick={() => {
+                          const printWindow = window.open('', '_blank');
+                          if (printWindow) {
+                            printWindow.document.write(`<html><head><title>Certificate - ${cert.certificateCode}</title></head><body style="text-align:center; padding: 50px; font-family: sans-serif;"><h1>Certificate of Completion</h1><p>This certifies completion of</p><h2>${cert.course?.title || 'Course'}</h2><p>Code: ${cert.certificateCode}</p><script>window.print();</script></body></html>`);
+                            printWindow.document.close();
+                          }
+                        }}>
+                          <Download className="w-3 h-3 mr-1" /> Download
+                        </Button>
+                      </>
+                    )}
+                  </div>
               </CardContent>
             </Card>
           ))}

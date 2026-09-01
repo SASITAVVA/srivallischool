@@ -61,6 +61,7 @@ import {
 import {
   AdminLayout,
   AdminDashMain,
+  AdminCertificates,
   AdminStudents,
   AdminParents,
   AdminTeachers,
@@ -149,6 +150,7 @@ function AdminScreen({ screen }: { screen: Screen }) {
       
       case 'ADMIN_REPORTS': return <AdminReports />;
       case 'ADMIN_SETTINGS': return <AdminSettings />;
+      case 'ADMIN_CERTIFICATES': return <AdminCertificates />;
       case 'ADMIN_TEACHER_ASSIGNMENTS': return <AdminTeacherAssignments />;
       case 'ADMIN_DASHBOARD':
       default: return <AdminDashMain />;

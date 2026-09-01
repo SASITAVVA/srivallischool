@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import {
   LayoutDashboard, Users, UserCheck, GraduationCap, BookOpen,
-  CreditCard, CalendarCheck, BarChart3, Settings, LogOut,
+  CreditCard, CalendarCheck, BarChart3, Settings, LogOut, Award, Link as LinkIcon,
   Menu, X, Bell, ChevronRight, ChevronDown, ChevronUp,
   Plus, Search, Eye, Trash2, Edit3, Phone, MessageCircle,
   TrendingUp, TrendingDown, DollarSign, UserCircle,
@@ -150,6 +150,7 @@ const sidebarNavItems: NavItem[] = [
   { label: 'Reports', icon: <BarChart3 size={20} />, screen: 'ADMIN_REPORTS' },
   { label: 'Settings', icon: <Settings size={20} />, screen: 'ADMIN_SETTINGS' },
   { label: 'Teacher Assignments', icon: <UserCheck size={20} />, screen: 'ADMIN_TEACHER_ASSIGNMENTS' },
+  { label: 'Certificates', icon: <Award size={20} />, screen: 'ADMIN_CERTIFICATES' as Screen },
 ];
 
 export function AdminLayout({ children }: { children: ReactNode }) {
@@ -3328,3 +3329,154 @@ export function AdminActivity() {
   );
 }
 
+
+
+
+export function AdminCertificates() {
+  const [students, setStudents] = useState<any[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [certificates, setCertificates] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState({ studentId: '', courseId: '', certificateUrl: '', title: '' });
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchData = useCallback(() => {
+    let cancelled = false;
+    setLoading(true);
+    Promise.all([
+      fetchWithAuth('/api/students').then(r => r.json()),
+      fetchWithAuth('/api/courses').then(r => r.json()),
+      fetchWithAuth('/api/certificates').then(r => r.json())
+    ]).then(([sData, cData, certData]) => {
+      if (cancelled) return;
+      if (sData.success) setStudents(sData.students || []);
+      if (cData.success) setCourses(cData.courses || []);
+      if (certData.success) setCertificates(certData.certificates || []);
+      setLoading(false);
+    }).catch(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => { const cleanup = fetchData(); return cleanup; }, [fetchData]);
+
+  const handleIssue = async () => {
+    if (!form.studentId || !form.courseId || !form.certificateUrl) {
+      addToast('Student, Course, and Certificate Link are required', 'error');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetchWithAuth('/api/certificates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+      const data = await res.json();
+      if (data.success) {
+        addToast('Certificate issued successfully!', 'success');
+        setForm({ studentId: '', courseId: '', certificateUrl: '', title: '' });
+        fetchData();
+      } else {
+        addToast(data.message || 'Failed to issue certificate', 'error');
+      }
+    } catch {
+      addToast('Error issuing certificate', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) return <LoadingSkeleton />;
+
+  return (
+    <div className="space-y-6 bounce-in">
+      <div>
+        <h2 className="text-2xl font-bold text-foreground">Certificates</h2>
+        <p className="text-muted-foreground">Issue and manage student certificates with external links.</p>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-6">
+        <Card className="md:col-span-1 fun-shadow border-0">
+          <CardHeader className="bg-srivalli-light-pink pb-4">
+            <CardTitle className="text-lg">Issue New Certificate</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 space-y-4">
+            <div className="space-y-2">
+              <Label>Student *</Label>
+              <select className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" value={form.studentId} onChange={e => setForm({...form, studentId: e.target.value})}>
+                <option value="">Select Student...</option>
+                {students.map(s => (
+                  <option key={s.id} value={s.id}>{s.name} ({s.id})</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label>Course *</Label>
+              <select className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" value={form.courseId} onChange={e => setForm({...form, courseId: e.target.value})}>
+                <option value="">Select Course...</option>
+                {courses.map(c => (
+                  <option key={c.id} value={c.id}>{c.title}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label>Certificate Link (URL) *</Label>
+              <Input placeholder="https://drive.google.com/..." value={form.certificateUrl} onChange={e => setForm({...form, certificateUrl: e.target.value})} className="rounded-xl" />
+            </div>
+            <div className="space-y-2">
+              <Label>Title (Optional)</Label>
+              <Input placeholder="e.g. Master Orator 2026" value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="rounded-xl" />
+            </div>
+            <Button className="w-full rounded-xl gradient-pink text-white font-bold" onClick={handleIssue} disabled={submitting}>
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+              Save Certificate
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2 fun-shadow border-0">
+          <CardHeader className="bg-srivalli-light-purple pb-4">
+            <CardTitle className="text-lg">Issued Certificates</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {certificates.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">No certificates issued yet.</div>
+            ) : (
+              <div className="divide-y divide-border">
+                {certificates.map(cert => {
+                  const student = students.find(s => s.id === cert.studentId);
+                  const course = courses.find(c => c.id === cert.courseId);
+                  return (
+                    <div key={cert.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-srivalli-pink/10 rounded-full">
+                          <Award className="w-5 h-5 text-srivalli-pink" />
+                        </div>
+                        <div>
+                          <p className="font-semibold">{student?.name || 'Unknown Student'}</p>
+                          <p className="text-xs text-muted-foreground">{course?.title || cert.title || 'Certificate'}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {cert.certificateUrl && (
+                          <Button size="sm" variant="outline" className="rounded-xl text-xs h-8" onClick={() => window.open(cert.certificateUrl, '_blank')}>
+                            <LinkIcon className="w-3 h-3 mr-1" /> View Link
+                          </Button>
+                        )}
+                        <span className="text-xs text-muted-foreground bg-srivalli-light-gray px-2 py-1 rounded">
+                          {formatDate(cert.issuedAt)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

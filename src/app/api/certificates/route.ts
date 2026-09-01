@@ -15,6 +15,7 @@ function toObj(doc: { id: string; data(): Record<string, unknown> }) {
 // GET certificates by ?studentId or ?teacherId
 export async function GET(req: Request) {
   try {
+    const user = await verifyToken(req).catch(() => null);
     const { searchParams } = new URL(req.url);
     const studentId = searchParams.get('studentId');
     const teacherId = searchParams.get('teacherId');
@@ -25,7 +26,7 @@ export async function GET(req: Request) {
       query = query.where('studentId', '==', studentId);
     } else if (teacherId) {
       query = query.where('teacherId', '==', teacherId);
-    } else {
+    } else if (user?.role !== 'admin') {
       return NextResponse.json(
         { success: false, message: 'studentId or teacherId query parameter is required' },
         { status: 400 }
