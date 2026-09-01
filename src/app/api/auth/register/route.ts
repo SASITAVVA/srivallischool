@@ -1,10 +1,11 @@
 import { adminAuth, adminDb } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 import { FieldValue } from 'firebase-admin/firestore';
+import { v4 as uuidv4 } from 'uuid';
 
 function generateEnrollmentId() {
   const year = new Date().getFullYear();
-  const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const randomStr = uuidv4().substring(0, 8).toUpperCase();
   return `SS-${year}-${randomStr}`;
 }
 
@@ -12,6 +13,10 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { role } = body;
+
+    if (!['student', 'parent'].includes(role)) {
+      return NextResponse.json({ success: false, message: 'Invalid role' }, { status: 400 });
+    }
 
     if (role === 'parent') {
       // ── Parent Registration ──

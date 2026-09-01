@@ -45,7 +45,10 @@ export type Screen =
   | 'ADMIN_SETTINGS'
   | 'ADMIN_TEACHER_ASSIGNMENTS'
   | 'ADMIN_DEMO_REQUESTS'
-  | 'ADMIN_ACTIVITY';
+  | 'ADMIN_CERTIFICATES'
+  | 'ADMIN_ACTIVITY'
+  | 'TEACHER_PROFILE'
+  | 'PARENT_PROFILE';
 
 export type UserRole = 'student' | 'parent' | 'teacher' | 'admin' | null;
 

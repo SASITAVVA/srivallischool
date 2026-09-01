@@ -113,6 +113,7 @@ function ParentScreen({ screen }: { screen: Screen }) {
       case 'PARENT_CLASSES': return <ParentClasses />;
       case 'PARENT_PAYMENTS': return <ParentPayments />;
       case 'PARENT_CERTIFICATES': return <ParentCertificates />;
+      case 'PARENT_PROFILE': return <ParentProfile />;
       case 'PARENT_DASHBOARD':
       default: return <ParentDashMain />;
     }
@@ -150,6 +151,7 @@ function AdminScreen({ screen }: { screen: Screen }) {
       
       case 'ADMIN_REPORTS': return <AdminReports />;
       case 'ADMIN_SETTINGS': return <AdminSettings />;
+      case 'ADMIN_ACTIVITY': return <AdminActivity />;
       case 'ADMIN_CERTIFICATES': return <AdminCertificates />;
       case 'ADMIN_TEACHER_ASSIGNMENTS': return <AdminTeacherAssignments />;
       case 'ADMIN_DASHBOARD':

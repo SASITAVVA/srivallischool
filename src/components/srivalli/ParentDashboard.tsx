@@ -213,7 +213,7 @@ const SIDEBAR_NAV: NavItem[] = [
   { label: 'Classes', icon: <Video className="w-5 h-5" />, screen: 'PARENT_CLASSES' },
   { label: 'Payments', icon: <CreditCard className="w-5 h-5" />, screen: 'PARENT_PAYMENTS' },
   { label: 'Certificates', icon: <Award className="w-5 h-5" />, screen: 'PARENT_CERTIFICATES' },
-  { label: 'Profile', icon: <UserCircle className="w-5 h-5" />, screen: 'STUDENT_PROFILE' },
+  { label: 'Profile', icon: <UserCircle className="w-5 h-5" />, screen: 'PARENT_PROFILE' },
 ];
 
 const BOTTOM_NAV: NavItem[] = [
@@ -221,7 +221,7 @@ const BOTTOM_NAV: NavItem[] = [
   { label: 'Progress', icon: <BarChart3 className="w-5 h-5" />, screen: 'PARENT_CHILDREN' },
   { label: 'Classes', icon: <Video className="w-5 h-5" />, screen: 'PARENT_CLASSES' },
   { label: 'Payments', icon: <CreditCard className="w-5 h-5" />, screen: 'PARENT_PAYMENTS' },
-  { label: 'Profile', icon: <UserCircle className="w-5 h-5" />, screen: 'STUDENT_PROFILE' },
+  { label: 'Profile', icon: <UserCircle className="w-5 h-5" />, screen: 'PARENT_PROFILE' },
 ];
 
 function ParentSidebarContent({ onClose }: { onClose?: () => void }) {

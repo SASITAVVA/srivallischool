@@ -352,13 +352,14 @@ export function AdminDashMain() {
       setLoading(true);
       setError('');
       try {
-        const [studentsRes, parentsRes, teachersRes, coursesRes, revenueRes, demosRes] = await Promise.allSettled([
+        const [studentsRes, parentsRes, teachersRes, coursesRes, revenueRes, demosRes, enrollmentsRes] = await Promise.allSettled([
           fetchApi('/api/students'),
           fetchApi('/api/parents'),
           fetchApi('/api/teachers'),
           fetchApi('/api/courses'),
           fetchApi('/api/reports?type=revenue'),
           fetchApi('/api/demo-request'),
+            fetchApi('/api/enrollments'),
         ]);
 
         const students = studentsRes.status === 'fulfilled' ? (studentsRes.value.students || []) : [];
@@ -375,8 +376,7 @@ export function AdminDashMain() {
           activeCourses: courses.filter((c: Record<string, unknown>) => c.isActive).length,
           totalRevenue: revenue.summary?.totalRevenue || 0,
           monthlyRevenue: Object.values(revenue.monthlyRevenue || {}).slice(-1)[0] || 0,
-          activeEnrollments: 0,
-          pendingDemos: demos.filter((d: Record<string, unknown>) => d.status === 'New').length,
+          activeEnrollments: (enrollmentsRes.status === 'fulfilled' ? (enrollmentsRes.value.enrollments || []) : []).filter((e: any) => e.status === 'active').length, pendingDemos: demos.filter((d: Record<string, unknown>) => d.status === 'New').length,
         });
 
         setRecentStudents(students.slice(0, 5));

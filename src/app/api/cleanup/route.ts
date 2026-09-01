@@ -18,8 +18,7 @@ export async function POST(req: Request) {
     for (const doc of usersSnap.docs) {
       const data = doc.data();
       if (data.role === 'admin') continue;
-      if (data.email && safeEmails.includes(data.email.toLowerCase())) continue;
-      toDeleteUids.push(doc.id);
+      if (data.email && (data.email.endsWith('@parent.com') || data.email.endsWith('.test') || data.isTestData)) { toDeleteUids.push(doc.id); }
     }
 
     // Also get any students/parents/teachers that might not be in users collection
@@ -28,10 +27,7 @@ export async function POST(req: Request) {
       const snap = await adminDb.collection(col).get();
       for (const doc of snap.docs) {
         const data = doc.data();
-        if (data.email && safeEmails.includes(data.email.toLowerCase())) continue;
-        if (!toDeleteUids.includes(doc.id) && data.role !== 'admin') {
-          toDeleteUids.push(doc.id);
-        }
+        if (!toDeleteUids.includes(doc.id) && data.role !== 'admin' && data.email && (data.email.endsWith('@parent.com') || data.email.endsWith('.test') || data.isTestData)) { toDeleteUids.push(doc.id); }
       }
     }
 

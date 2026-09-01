@@ -72,7 +72,7 @@ export function handleApiError(error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 400 });
   }
   console.error('API Error:', error);
-  return NextResponse.json({ success: false, message: 'Internal server error', error: String(error), stack: error?.stack }, { status: 500 });
+  return NextResponse.json({ success: false, message: 'Internal server error' /* Stack trace hidden */ }, { status: 500 });
 }
 
 
