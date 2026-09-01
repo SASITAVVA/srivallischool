@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     const studentId = searchParams.get('studentId');
     const teacherId = searchParams.get('teacherId');
 
-    let query = adminDb.collection('certificates').orderBy('issuedAt', 'desc');
+    let query: any = adminDb.collection('certificates');
 
     if (studentId) {
       query = query.where('studentId', '==', studentId);
@@ -34,7 +34,14 @@ export async function GET(req: Request) {
     }
 
     const snapshot = await query.get();
-    const certificates = snapshot.docs.map(toObj);
+    let certificates = snapshot.docs.map(toObj);
+
+    // Sort in memory to avoid Firestore composite index requirements
+    certificates.sort((a, b) => {
+      const dateA = a.issuedAt ? new Date(a.issuedAt).getTime() : 0;
+      const dateB = b.issuedAt ? new Date(b.issuedAt).getTime() : 0;
+      return dateB - dateA;
+    });
 
     return NextResponse.json({
       success: true,
