@@ -3346,9 +3346,9 @@ export function AdminCertificates() {
     let cancelled = false;
     setLoading(true);
     Promise.all([
-      fetchApi('/api/students').then(r => r.json()),
-      fetchApi('/api/courses').then(r => r.json()),
-      fetchApi('/api/certificates').then(r => r.json())
+      fetchApi('/api/students'),
+      fetchApi('/api/courses'),
+      fetchApi('/api/certificates')
     ]).then(([sData, cData, certData]) => {
       if (cancelled) return;
       if (sData.success) setStudents(sData.students || []);
@@ -3370,12 +3370,11 @@ export function AdminCertificates() {
     }
     setSubmitting(true);
     try {
-      const res = await fetchApi('/api/certificates', {
+      const data = await fetchApi('/api/certificates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
       });
-      const data = await res.json();
       if (data.success) {
         addToast('Certificate issued successfully!', 'success');
         setForm({ studentId: '', courseId: '', certificateUrl: '', title: '' });
@@ -3393,12 +3392,12 @@ export function AdminCertificates() {
   const handleDelete = async (certId: string) => {
     if (!confirm('Are you sure you want to delete this certificate?')) return;
     try {
-      const res = await fetchApi(`/api/certificates?id=${certId}`, { method: 'DELETE' });
-      if (res.ok || (await res.json()).success) {
+      const data = await fetchApi(`/api/certificates?id=${certId}`, { method: 'DELETE' });
+      if (data.success) {
         addToast('Certificate deleted', 'success');
         fetchData();
       } else {
-        addToast('Failed to delete certificate', 'error');
+        addToast(data.message || 'Failed to delete certificate', 'error');
       }
     } catch {
       addToast('Failed to delete certificate', 'error');
