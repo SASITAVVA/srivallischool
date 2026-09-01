@@ -2096,11 +2096,11 @@ export function StudentVideoSubmissions() {
     }
     setSubmitting(true);
     try {
-      const res = await fetch('/api/student-videos', {
-        method: 'POST',
-        headers: await getAuthHeaders(),
-        body: JSON.stringify(form),
-      });
+      const res = await fetchWithAuth('/api/student-videos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        });
       const data = await res.json();
       if (data.success) {
         addToast('Video submitted successfully!');
