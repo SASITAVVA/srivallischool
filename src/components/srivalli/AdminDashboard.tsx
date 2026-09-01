@@ -3571,9 +3571,25 @@ export function AdminCertificates() {
                                   <ExternalLink className="w-4 h-4" />
                                 </Button>
                               )}
-                              <Button size="icon" variant="outline" className="w-8 h-8 rounded-lg text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" onClick={() => handleDelete(cert.id)}>
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                              <AlertDialog open={deleteCertId === cert.id} onOpenChange={(open) => !open && setDeleteCertId(null)}>
+                                <AlertDialogTrigger asChild>
+                                  <Button size="icon" variant="outline" className="w-8 h-8 rounded-lg text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" onClick={() => setDeleteCertId(cert.id)}>
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Certificate?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete this certificate for <strong>{sName}</strong>? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">Delete</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </TableCell>
                         </TableRow>
