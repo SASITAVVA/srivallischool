@@ -2705,6 +2705,25 @@ export function AdminSettings() {
   const [emailForm, setEmailForm] = useState({ newEmail: '', password: '' });
   const [updatingEmail, setUpdatingEmail] = useState(false);
 
+  
+  const handleCleanup = async () => {
+    if (!confirm('Are you sure you want to clean up all fake data? This cannot be undone.')) return;
+    setSaving(true);
+    try {
+      const res = await fetchApi('/api/cleanup', { method: 'POST' });
+      if (res.success) {
+        addToast(res.message, 'success');
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        addToast('Failed: ' + res.message, 'error');
+      }
+    } catch (err: any) {
+      addToast(err.message, 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleUpdateEmail = async () => {
     if (!emailForm.newEmail || !emailForm.password) {
       addToast('Please enter both new email and current password', 'error');
