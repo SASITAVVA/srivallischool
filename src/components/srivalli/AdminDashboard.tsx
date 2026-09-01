@@ -3339,6 +3339,8 @@ export function AdminCertificates() {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ studentId: '', courseId: '', certificateUrl: '', title: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 5;
 
   const fetchData = useCallback(() => {
     let cancelled = false;
@@ -3388,6 +3390,21 @@ export function AdminCertificates() {
     }
   };
 
+  const handleDelete = async (certId: string) => {
+    if (!confirm('Are you sure you want to delete this certificate?')) return;
+    try {
+      const res = await fetchApi(`/api/certificates?id=${certId}`, { method: 'DELETE' });
+      if (res.ok || (await res.json()).success) {
+        addToast('Certificate deleted', 'success');
+        fetchData();
+      } else {
+        addToast('Failed to delete certificate', 'error');
+      }
+    } catch {
+      addToast('Failed to delete certificate', 'error');
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -3397,6 +3414,199 @@ export function AdminCertificates() {
       </div>
     );
   }
+
+  const paginatedCerts = certificates.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+  const totalPages = Math.ceil(certificates.length / rowsPerPage);
+
+  const getCourseBadgeColor = (courseTitle: string) => {
+    if (courseTitle.toLowerCase().includes('speaking')) return 'bg-blue-100 text-blue-700 border-blue-200';
+    if (courseTitle.toLowerCase().includes('writing')) return 'bg-green-100 text-green-700 border-green-200';
+    return 'bg-purple-100 text-purple-700 border-purple-200';
+  };
+
+  return (
+    <div className="space-y-6 bounce-in max-w-6xl mx-auto">
+      <div>
+        <h2 className="text-2xl font-bold text-foreground">Certificates</h2>
+        <p className="text-muted-foreground">Issue and manage student certificates with external links.</p>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-1 fun-shadow border-0 rounded-2xl overflow-hidden h-fit">
+          <CardHeader className="bg-red-50/50 pb-4 border-b border-red-100/50">
+            <CardTitle className="text-lg text-red-600 flex items-center gap-2">
+              <div className="p-2 bg-red-100 text-red-600 rounded-lg">
+                <FileText className="w-5 h-5" />
+              </div>
+              Issue New Certificate
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-5 space-y-5">
+            <div className="space-y-2">
+              <Label className="font-semibold">Student <span className="text-red-500">*</span></Label>
+              <Select value={form.studentId} onValueChange={v => setForm({...form, studentId: v})}>
+                <SelectTrigger className="w-full rounded-xl border-muted-foreground/20">
+                  <SelectValue placeholder="Select Student..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {students.map(s => (
+                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="font-semibold">Course <span className="text-red-500">*</span></Label>
+              <Select value={form.courseId} onValueChange={v => setForm({...form, courseId: v})}>
+                <SelectTrigger className="w-full rounded-xl border-muted-foreground/20">
+                  <SelectValue placeholder="Select Course..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {courses.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="font-semibold">Certificate Link (URL) <span className="text-red-500">*</span></Label>
+              <div className="relative">
+                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input 
+                  placeholder="https://drive.google.com/..." 
+                  value={form.certificateUrl} 
+                  onChange={e => setForm({...form, certificateUrl: e.target.value})} 
+                  className="rounded-xl pl-9 border-muted-foreground/20" 
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="font-semibold">Title (Optional)</Label>
+              <Input 
+                placeholder="e.g. Master Orator 2026" 
+                value={form.title} 
+                onChange={e => setForm({...form, title: e.target.value})} 
+                className="rounded-xl border-muted-foreground/20" 
+              />
+            </div>
+            
+            <Button className="w-full rounded-xl gradient-pink text-white font-bold h-11 shadow-md" onClick={handleIssue} disabled={submitting}>
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+              Save Certificate
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2 fun-shadow border-0 rounded-2xl overflow-hidden flex flex-col">
+          <CardHeader className="bg-slate-50/50 pb-4 border-b border-slate-100">
+            <CardTitle className="text-lg text-slate-800 flex items-center gap-2">
+              <div className="p-2 bg-blue-100 text-blue-700 rounded-lg">
+                <Award className="w-5 h-5" />
+              </div>
+              Issued Certificates
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 flex-1 flex flex-col">
+            <div className="overflow-x-auto flex-1">
+              <Table>
+                <TableHeader className="bg-slate-50/50">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="font-semibold text-slate-600 pl-6">Student</TableHead>
+                    <TableHead className="font-semibold text-slate-600">Course</TableHead>
+                    <TableHead className="font-semibold text-slate-600">Title</TableHead>
+                    <TableHead className="font-semibold text-slate-600">Issued On</TableHead>
+                    <TableHead className="font-semibold text-slate-600 text-center pr-6">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedCerts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                        No certificates issued yet.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    paginatedCerts.map(cert => {
+                      const student = students.find(s => s.id === cert.studentId);
+                      const course = courses.find(c => c.id === cert.courseId);
+                      const sName = student?.name || 'Unknown';
+                      const initials = sName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+                      
+                      // Using a determinist random-like color based on name length for avatar
+                      const colors = ['bg-red-100 text-red-600', 'bg-blue-100 text-blue-600', 'bg-amber-100 text-amber-600', 'bg-emerald-100 text-emerald-600', 'bg-purple-100 text-purple-600'];
+                      const avatarColor = colors[sName.length % colors.length];
+
+                      return (
+                        <TableRow key={cert.id} className="hover:bg-slate-50/50">
+                          <TableCell className="pl-6">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-10 h-10 border border-white shadow-sm">
+                                <AvatarFallback className={avatarColor}>{initials}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-semibold text-slate-800">{sName}</p>
+                                <p className="text-xs text-muted-foreground">{student?.age ? `${student.age}y` : 'Student'}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={getCourseBadgeColor(course?.title || '')}>
+                              {course?.title || 'Course'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <p className="text-sm text-slate-700 max-w-[150px] truncate">{cert.title || 'Course Certificate'}</p>
+                          </TableCell>
+                          <TableCell className="text-sm text-slate-600">
+                            {formatDate(cert.issuedAt).split(',')[0]}
+                          </TableCell>
+                          <TableCell className="pr-6">
+                            <div className="flex items-center justify-center gap-2">
+                              {cert.certificateUrl && (
+                                <Button size="icon" variant="outline" className="w-8 h-8 rounded-lg text-blue-600 border-blue-200 hover:bg-blue-50" onClick={() => window.open(cert.certificateUrl, '_blank')}>
+                                  <ExternalLink className="w-4 h-4" />
+                                </Button>
+                              )}
+                              <Button size="icon" variant="outline" className="w-8 h-8 rounded-lg text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" onClick={() => handleDelete(cert.id)}>
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            
+            {certificates.length > 0 && (
+              <div className="p-4 border-t border-slate-100 flex items-center justify-between text-sm text-muted-foreground bg-white mt-auto">
+                <div>
+                  Showing {Math.min((currentPage - 1) * rowsPerPage + 1, certificates.length)} to {Math.min(currentPage * rowsPerPage, certificates.length)} of {certificates.length} certificates
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button variant="outline" size="icon" className="w-8 h-8 rounded-lg" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
+                    <ChevronRight className="w-4 h-4 rotate-180" />
+                  </Button>
+                  <Button variant="default" size="icon" className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white">
+                    {currentPage}
+                  </Button>
+                  <Button variant="outline" size="icon" className="w-8 h-8 rounded-lg" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="space-y-6 bounce-in">
