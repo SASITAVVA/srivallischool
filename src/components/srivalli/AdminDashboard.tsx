@@ -795,7 +795,7 @@ export function AdminStudents() {
                       {Array.isArray(s.enrollments) && s.enrollments.filter((e: any) => e.status === 'active').length > 0 ? (
                         s.enrollments.filter((e: any) => e.status === 'active').map((e: any, i: number) => {
                            const c = courses.find(course => course.id === e.courseId);
-                           return <Badge key={i} variant="outline" className="text-[10px]">{c ? c.title : e.courseId}</Badge>;
+                           return <Badge key={i} variant="outline" className="text-[10px]">{c ? String(c.title) : 'Deleted Course'}</Badge>;
                         })
                       ) : (
                         <span className="text-xs text-muted-foreground">No active courses</span>
