@@ -3388,7 +3388,15 @@ export function AdminCertificates() {
     }
   };
 
-  if (loading) return <LoadingSkeleton />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-[200px] w-full rounded-2xl" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 bounce-in">
