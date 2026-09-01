@@ -559,6 +559,7 @@ export function ParentDashMain() {
   const activePayments = payments.filter(p =>
     p.enrollment?.status === 'active' && p.status === 'completed'
   );
+  const activePlansCount = Object.values(childEnrollments).flat().filter(e => e.status === 'active').length;
   const latestPayment = activePayments[0];
   const upcomingClasses = allClasses
     .filter(c => isFuture(c.date) || isToday(c.date))
@@ -603,7 +604,7 @@ export function ParentDashMain() {
         <StatCard
           icon={<CreditCard className="w-5 h-5 text-srivalli-teal" />}
           label="Active Plans"
-          value={activePayments.length}
+            value={activePlansCount}
           color="text-srivalli-teal"
           bg="bg-srivalli-light-teal"
         />
