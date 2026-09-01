@@ -907,7 +907,7 @@ export function AdminStudents() {
                     <div className="space-y-2">
                       {(studentDetail.student.enrollments as Array<Record<string, unknown>>).map((e: Record<string, unknown>) => (
                         <div key={String(e.id)} className="flex items-center justify-between bg-gray-50 rounded-lg p-2 px-3">
-                          <span className="text-sm">{String((e.course as Record<string, unknown>)?.title || 'Unknown')}</span>
+                          <span className="text-sm">{String((courses.find(c => c.id === e.courseId) as Record<string, unknown>)?.title || (e.course as Record<string, unknown>)?.title || 'Unknown')}</span>
                           <div className="flex items-center gap-2">
                             <Badge variant={String(e.status) === 'active' ? 'default' : 'secondary'} className="text-[10px]">
                               {String(e.status)}
