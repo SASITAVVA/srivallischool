@@ -3340,6 +3340,7 @@ export function AdminCertificates() {
   const [form, setForm] = useState({ studentId: '', courseId: '', certificateUrl: '', title: '' });
   const [submitting, setSubmitting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleteCertId, setDeleteCertId] = useState<string | null>(null);
   const rowsPerPage = 5;
 
   const fetchData = useCallback(() => {
@@ -3389,13 +3390,14 @@ export function AdminCertificates() {
     }
   };
 
-  const handleDelete = async (certId: string) => {
-    if (!confirm('Are you sure you want to delete this certificate?')) return;
+  const handleDelete = async () => {
+    if (!deleteCertId) return;
     try {
-      const data = await fetchApi(`/api/certificates?id=${certId}`, { method: 'DELETE' });
+      const data = await fetchApi(`/api/certificates?id=${deleteCertId}`, { method: 'DELETE' });
       if (data.success) {
         addToast('Certificate deleted', 'success');
         fetchData();
+        setDeleteCertId(null);
       } else {
         addToast(data.message || 'Failed to delete certificate', 'error');
       }
