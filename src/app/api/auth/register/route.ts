@@ -31,12 +31,13 @@ export async function POST(req: Request) {
         displayName: name,
       });
 
-      // Set custom claims for role
-      await adminAuth.setCustomUserClaims(userRecord.uid, { role: 'parent' });
+      try {
+        // Set custom claims for role
+        await adminAuth.setCustomUserClaims(userRecord.uid, { role: 'parent' });
 
-      // Create parent profile in Firestore
-      const parentRef = adminDb.collection('parents').doc(userRecord.uid);
-      await parentRef.set({
+        // Create parent profile in Firestore
+        const parentRef = adminDb.collection('parents').doc(userRecord.uid);
+        await parentRef.set({
         name,
         email,
         mobile,
@@ -110,15 +111,10 @@ export async function POST(req: Request) {
         }
       }
 
-      // Also create in users collection for unified lookup
-      await adminDb.collection('users').doc(userRecord.uid).set({
-        name,
-        email,
-        mobile,
-        role: 'parent',
-        uid: userRecord.uid,
-        createdAt: FieldValue.serverTimestamp(),
-      });
+      } catch (dbError) {
+        await adminAuth.deleteUser(userRecord.uid);
+        throw dbError;
+      }
 
       return NextResponse.json(
         {
@@ -252,6 +248,7 @@ export async function POST(req: Request) {
     const firebaseError = error as { code?: string; message?: string };
     console.error('Registration error:', error);
 
-    if (firebaseError) { return NextResponse.json({ success: false, message: 'Registration failed. If you already have an account, please login.' }, { status: 400 }); }
+    const msg = firebaseError.code === 'auth/email-already-exists' ? 'Email is already in use. Please login.' : firebaseError.message || 'Registration failed.';
+    return NextResponse.json({ success: false, message: msg }, { status: 400 });
   }
 }
