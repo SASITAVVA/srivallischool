@@ -64,6 +64,13 @@ export async function GET(req: Request) {
             studentName: studentMap[a.studentId as string]?.name || 'Unknown'
           }))
       }));
+    } else if (user.role === 'student') {
+      const attemptsSnap = await adminDb.collection('quizAttempts').where('studentId', '==', user.uid).get();
+      const attempts = attemptsSnap.docs.map(toObj);
+      quizzes = quizzes.map(quiz => ({
+        ...quiz,
+        attempts: attempts.filter(a => a.quizId === quiz.id)
+      }));
     }
 
     return NextResponse.json({ success: true, quizzes });

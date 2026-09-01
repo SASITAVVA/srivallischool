@@ -1411,6 +1411,7 @@ export function StudentProgress() {
   const user = useAppStore(s => s.user);
   const [enrollments, setEnrollments] = useState<EnrollmentItem[]>([]);
   const [badges, setBadges] = useState<EarnedBadgeItem[]>([]);
+  const [quizzes, setQuizzes] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<{ total: number; present: number; absent: number; percentage: number }>({ total: 0, present: 0, absent: 0, percentage: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -1418,10 +1419,11 @@ export function StudentProgress() {
     let cancelled = false;
     const fetchAll = async () => {
       try {
-        const [enrollRes, badgeRes, attendRes] = await Promise.allSettled([
+        const [enrollRes, badgeRes, attendRes, quizRes] = await Promise.allSettled([
           fetchWithAuth(`/api/enrollments?studentId=${user?.id || ''}`),
           fetchWithAuth(`/api/badges?studentId=${user?.id || ''}`),
           fetchWithAuth(`/api/attendance?studentId=${user?.id || ''}`),
+          fetchWithAuth(`/api/quizzes`),
         ]);
 
         if (cancelled) return;
@@ -1437,6 +1439,10 @@ export function StudentProgress() {
           const d = await attendRes.value.json();
           if (d.success && d.stats) setAttendance(d.stats);
         }
+        if (quizRes.status === 'fulfilled') {
+          const d = await quizRes.value.json();
+          if (d.success) setQuizzes(d.quizzes || []);
+        }
       } catch {} finally { if (!cancelled) setLoading(false); }
     };
     fetchAll();
@@ -1448,10 +1454,14 @@ export function StudentProgress() {
     progress: Math.min(100, Math.round(((attendance.percentage || 0) + (badges.length * 10)) / 2) || 0), // Simple dynamic formula
     color: i % 2 === 0 ? 'bg-srivalli-pink' : 'bg-srivalli-purple'
   }));
+  
+  const totalQuizzes = quizzes.length;
+  const completedQuizzes = quizzes.filter(q => q.attempts && q.attempts.length > 0).length;
+  const quizPercentage = totalQuizzes > 0 ? Math.round((completedQuizzes / totalQuizzes) * 100) : 0;
 
   const activityBreakdown = [
     { label: 'Activities', progress: Math.min(100, (badges.length * 20) || 0), icon: <Zap className="w-4 h-4" />, color: 'text-srivalli-pink' },
-    { label: 'Quizzes', progress: Math.min(100, (badges.length * 15) || 0), icon: <Brain className="w-4 h-4" />, color: 'text-srivalli-purple' },
+    { label: 'Quizzes', progress: quizPercentage, icon: <Brain className="w-4 h-4" />, color: 'text-srivalli-purple' },
     { label: 'Attendance', progress: attendance.percentage || 0, icon: <CheckCircle2 className="w-4 h-4" />, color: 'text-srivalli-teal' },
   ];
 
