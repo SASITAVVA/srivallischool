@@ -930,7 +930,7 @@ export function ParentChildren() {
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-base truncate">{child.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {child.grade ? `Grade ${child.grade}` : ''} {child.age ? `· ${child.age} yrs` : ''} {child.schoolName ? `· ${child.schoolName}` : ''}
+                      {child.grade ? `Grade ${child.grade}` : ''} {child.age ? `· ${child.age} yrs` : ''} {child.schoolName ? `· ${child.schoolName}` : ''} {child.courseSelection ? ` \u2022 Int: ${child.courseSelection}` : ''}
                     </p>
                   </div>
                   <ArrowRight className={`w-5 h-5 ${cc.text}`} />
@@ -996,7 +996,7 @@ function renderChildDetail(
           <div>
             <h3 className="text-xl font-bold">{child.name}</h3>
             <p className="text-white text-sm">
-              {child.grade ? `Grade ${child.grade}` : 'No grade'} {child.age ? `· ${child.age} years` : ''} {child.schoolName ? `· ${child.schoolName}` : ''}
+              {child.grade ? `Grade ${child.grade}` : 'No grade'} {child.age ? `· ${child.age} years` : ''} {child.schoolName ? `· ${child.schoolName}` : ''} {child.courseSelection ? ` \u2022 Int: ${child.courseSelection}` : ''}
             </p>
           </div>
         </div>
@@ -1920,7 +1920,7 @@ export function ParentProfile() {
                     </Avatar>
                     <div>
                       <p className="text-sm font-semibold">{child.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{child.grade ? `Grade ${child.grade}` : ''} {att ? `· ${att.percentage}% attend.` : ''}</p>
+                      <p className="text-[10px] text-muted-foreground">{child.grade ? `Grade ${child.grade}` : ''} {child.courseSelection ? ` \u2022 ${child.courseSelection}` : ''} {att ? `· ${att.percentage}% attend.` : ''}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
