@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useMemo, type ReactNode } from 'react';
 import {
@@ -1466,17 +1466,6 @@ export function ParentPayments() {
                     <span className="text-muted-foreground flex items-center gap-1">
                       <RefreshCw className="w-3 h-3" /> Renews: {renewalDate}
                     </span>
-                    <div className="flex gap-2">
-                      <Button size="sm" className="gradient-teal text-white rounded-xl text-xs" onClick={() => {
-                        addToast('Redirecting to checkout...', 'info');
-                        setTimeout(() => window.location.href = '/checkout?courseId=' + p.enrollment.courseId, 1000);
-                      }}>
-                        <RefreshCw className="w-3 h-3 mr-1" /> Renew Now
-                      </Button>
-                      <Button size="sm" variant="outline" className="rounded-xl text-xs border-srivalli-teal/30 text-srivalli-teal" onClick={() => addToast('Upgrade options coming soon!', 'info')}>
-                        <ArrowUpRight className="w-3 h-3 mr-1" /> Upgrade
-                      </Button>
-                    </div>
                   </div>
                 </div>
               );
