@@ -3344,9 +3344,9 @@ export function AdminCertificates() {
     let cancelled = false;
     setLoading(true);
     Promise.all([
-      fetchWithAuth('/api/students').then(r => r.json()),
-      fetchWithAuth('/api/courses').then(r => r.json()),
-      fetchWithAuth('/api/certificates').then(r => r.json())
+      fetchApi('/api/students').then(r => r.json()),
+      fetchApi('/api/courses').then(r => r.json()),
+      fetchApi('/api/certificates').then(r => r.json())
     ]).then(([sData, cData, certData]) => {
       if (cancelled) return;
       if (sData.success) setStudents(sData.students || []);
@@ -3368,7 +3368,7 @@ export function AdminCertificates() {
     }
     setSubmitting(true);
     try {
-      const res = await fetchWithAuth('/api/certificates', {
+      const res = await fetchApi('/api/certificates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
