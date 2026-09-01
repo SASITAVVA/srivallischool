@@ -107,3 +107,34 @@ export async function POST(req: Request) {
     return handleApiError(error);
   }
 }
+
+
+// DELETE a certificate
+export async function DELETE(req: Request) {
+  try {
+    await requireRole(req, ['admin']);
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, message: 'Certificate ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const doc = await adminDb.collection('certificates').doc(id).get();
+    if (!doc.exists) {
+      return NextResponse.json(
+        { success: false, message: 'Certificate not found' },
+        { status: 404 }
+      );
+    }
+
+    await adminDb.collection('certificates').doc(id).delete();
+
+    return NextResponse.json({ success: true, message: 'Certificate deleted successfully' });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
