@@ -30,7 +30,7 @@ export async function middleware(request: NextRequest) {
                'anonymous'
 
     // ✅ Strict rate limiting for auth endpoints
-    if (pathname === '/api/auth/login' || pathname === '/api/auth/register') {
+    if (pathname === '/api/auth/register') {
       const { success, limit, remaining, reset } = authLimiter ? await authLimiter.limit(ip) : { success: true, limit: 5, remaining: 5, reset: Date.now() + 900000 }
 
       if (!success) {
