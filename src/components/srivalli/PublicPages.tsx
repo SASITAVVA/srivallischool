@@ -713,6 +713,8 @@ export function CoursesPage() {
 export function ContactPage() {
   const [contactForm, setContactForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [loading, setLoading] = useState(false);
+  const authLoading = useAppStore(s => s.authLoading);
+  useEffect(() => { if (!authLoading) setLoading(false); }, [authLoading]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -945,7 +947,9 @@ export function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const cred = await signInWithEmailAndPassword(auth, form.email, form.password);
+      sessionStorage.setItem('pendingLoginRole', form.role);
+        await signInWithEmailAndPassword(auth, form.email, form.password);
+        return;
       const idToken = await cred.user.getIdToken();
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -961,6 +965,7 @@ export function LoginPage() {
       useAppStore.getState().login(data.user, cred.user, idToken);
       addToast(`Welcome back, ${data.user.name}! 🥳`);
     } catch (err: unknown) {
+        sessionStorage.removeItem('pendingLoginRole');
       console.error('[Diagnostic] Firebase Auth/Login Error:', err);
       const fbErr = err as { code?: string, message?: string };
       let userMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';

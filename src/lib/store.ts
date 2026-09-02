@@ -179,19 +179,29 @@ export function initAuthListener() {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
-          body: JSON.stringify({}), // Do not send role or email from frontend for security
+          body: JSON.stringify(sessionStorage.getItem('pendingLoginRole') ? { role: sessionStorage.getItem('pendingLoginRole') } : {}),
         });
         
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
+            sessionStorage.removeItem('pendingLoginRole');
             store.login(data.user, firebaseUser, idToken);
             return;
           }
+        } else if (res.status === 403) {
+          sessionStorage.removeItem('pendingLoginRole');
+          auth.signOut();
+          const data = await res.json().catch(() => ({}));
+          store.addToast(data.message || 'Invalid role selected', 'error');
+          store.setAuthLoading(false);
+          return;
         }
+        sessionStorage.removeItem('pendingLoginRole');
         // If login endpoint fails (e.g., no profile yet), just set firebase user
         store.setAuthLoading(false);
       } catch {
+        sessionStorage.removeItem('pendingLoginRole');
         store.setAuthLoading(false);
       }
     } else {
