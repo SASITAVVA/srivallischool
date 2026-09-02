@@ -189,6 +189,7 @@ export function initAuthListener() {
             store.login(data.user, firebaseUser, idToken);
             return;
           }
+        }
         
         // If login endpoint fails (e.g., no profile yet), just set firebase user
         store.setAuthLoading(false);
