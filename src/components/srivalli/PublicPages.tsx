@@ -946,10 +946,9 @@ export function LoginPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    (window as any).isLoggingIn = true;
     try {
-      sessionStorage.setItem('pendingLoginRole', form.role);
-        await signInWithEmailAndPassword(auth, form.email, form.password);
-        return;
+      const cred = await signInWithEmailAndPassword(auth, form.email, form.password);
       const idToken = await cred.user.getIdToken();
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -959,14 +958,16 @@ export function LoginPage() {
       if (!res.ok) {
         await auth.signOut();
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Invalid credentials or wrong role selected');
+        addToast(data.message || 'Wrong Role Selected', 'error');
+        setLoading(false);
+        (window as any).isLoggingIn = false;
+        return;
       }
       const data = await res.json();
       useAppStore.getState().login(data.user, cred.user, idToken);
-      addToast(`Welcome back, ${data.user.name}! 🥳`);
+      addToast(`Welcome back, ${data.user.name}! ??`);
     } catch (err: unknown) {
-        sessionStorage.removeItem('pendingLoginRole');
-      console.error('[Diagnostic] Firebase Auth/Login Error:', err);
+console.error('[Diagnostic] Firebase Auth/Login Error:', err);
       const fbErr = err as { code?: string, message?: string };
       let userMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
       switch (fbErr.code) {

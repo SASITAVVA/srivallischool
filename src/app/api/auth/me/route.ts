@@ -36,26 +36,6 @@ export async function POST(req: Request) {
 
       // 4. Optionally check if frontend requested a specific role (to prevent confusion if they used the wrong login portal)
       // But we NEVER trust it for authorization. We only use the true role.
-      let requestedRole = '';
-      try {
-        const body = await req.json();
-        requestedRole = body.role;
-      } catch {
-        // Body is optional
-      }
-
-      if (!requestedRole) {
-        return NextResponse.json(
-          { success: false, message: 'Role is required for login' },
-          { status: 400 }
-        );
-      }
-      if (requestedRole !== actualRole) {
-        return NextResponse.json(
-          { success: false, message: 'Wrong Role Selected' },
-          { status: 403 }
-        );
-      }
 
       // 5. Fetch user profile from Firestore based on TRUE role
       const collectionMap: Record<string, string> = {

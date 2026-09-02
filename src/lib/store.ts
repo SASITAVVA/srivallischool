@@ -168,6 +168,7 @@ export function initAuthListener() {
   
   onAuthStateChanged(auth, async (firebaseUser) => {
     const store = useAppStore.getState();
+    if (typeof window !== 'undefined' && (window as any).isLoggingIn) return;
     
     if (firebaseUser) {
       store.setFirebaseUser(firebaseUser);
@@ -176,32 +177,22 @@ export function initAuthListener() {
         store.setIdToken(idToken);
         
         // Fetch user profile with true role derived from our backend
-        const res = await fetch('/api/auth/login', {
+        const res = await fetch('/api/auth/me', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
-          body: JSON.stringify(sessionStorage.getItem('pendingLoginRole') ? { role: sessionStorage.getItem('pendingLoginRole') } : {}),
+          body: JSON.stringify({}),
         });
         
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
-            sessionStorage.removeItem('pendingLoginRole');
             store.login(data.user, firebaseUser, idToken);
             return;
           }
-        } else if (res.status === 403) {
-          sessionStorage.removeItem('pendingLoginRole');
-          auth.signOut();
-          const data = await res.json().catch(() => ({}));
-          store.addToast(data.message || 'Invalid role selected', 'error');
-          store.setAuthLoading(false);
-          return;
-        }
-        sessionStorage.removeItem('pendingLoginRole');
+        
         // If login endpoint fails (e.g., no profile yet), just set firebase user
         store.setAuthLoading(false);
       } catch {
-        sessionStorage.removeItem('pendingLoginRole');
         store.setAuthLoading(false);
       }
     } else {
