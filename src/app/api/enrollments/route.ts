@@ -158,7 +158,7 @@ export async function POST(req: Request) {
       courseId,
       plan,
       parentId: null,
-      status: 'active',
+      status: user.role === 'admin' ? 'active' : 'pending',
       startDate: new Date().toISOString().split('T')[0],
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
@@ -285,7 +285,7 @@ export async function PUT(req: Request) {
     }
 
     // ✅ Validate status values
-    if (status && !['active', 'inactive', 'completed', 'cancelled'].includes(status)) {
+    if (status && !['pending', 'active', 'inactive', 'completed', 'cancelled'].includes(status)) {
       return NextResponse.json(
         { success: false, message: 'Invalid status value' },
         { status: 400 }

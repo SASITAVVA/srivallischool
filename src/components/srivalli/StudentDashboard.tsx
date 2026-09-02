@@ -681,14 +681,14 @@ export function StudentCourses() {
   const handleEnroll = async (courseId: string) => {
     if (!user?.id) return;
     try {
-      const res = await fetch('/api/enrollments', {
+      const res = await fetchWithAuth('/api/enrollments', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` },
-        body: JSON.stringify({ studentId: user.id, courseId, plan: 'Monthly Plan' })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId: user.id, courseId, plan: 'monthly' })
       });
       const data = await res.json();
       if (data.success) {
-        addToast('Successfully enrolled!');
+        addToast('Enrollment requested successfully! Waiting for admin approval.');
         setEnrollments(prev => [data.enrollment, ...prev]);
         setShowEnrollDialog(false);
       } else {

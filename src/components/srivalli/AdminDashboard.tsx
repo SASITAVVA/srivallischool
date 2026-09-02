@@ -970,42 +970,64 @@ export function AdminStudents() {
             {courses.map(course => {
               const student = students.find(s => String(s.id) === manageAccessId);
               const enrollments = Array.isArray(student?.enrollments) ? student.enrollments : [];
-              const activeEnrollment = enrollments.find((e: any) => e.courseId === course.id && e.status === 'active');
-              const isGranted = !!activeEnrollment;
-              
-              return (
-                <div key={String(course.id)} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium text-sm">{String(course.title)}</p>
-                    <p className="text-xs text-muted-foreground">Access: {isGranted ? 'Granted' : 'Revoked'}</p>
+                const activeEnrollment = enrollments.find((e: any) => e.courseId === course.id && e.status === 'active');
+                const pendingEnrollment = enrollments.find((e: any) => e.courseId === course.id && e.status === 'pending');
+                const isGranted = !!activeEnrollment;
+                const isPending = !!pendingEnrollment;
+                
+                return (
+                  <div key={String(course.id)} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <p className="font-medium text-sm">{String(course.title)}</p>
+                      <p className="text-xs text-muted-foreground">Access: {isGranted ? 'Granted' : isPending ? 'Pending Request' : 'Revoked'}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isPending && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-green-600 border-green-600 hover:bg-green-50"
+                          onClick={async () => {
+                            // Approve
+                            await fetchApi('/api/enrollments', {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ id: pendingEnrollment.id, status: 'active' })
+                            });
+                            loadStudents();
+                          }}
+                        >
+                          Approve Request
+                        </Button>
+                      )}
+                      <Button 
+                        variant={isGranted ? "destructive" : "default"} 
+                        size="sm"
+                        onClick={async () => {
+                          if (isGranted) {
+                            // Revoke
+                            await fetchApi('/api/enrollments', {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ id: activeEnrollment.id, status: 'cancelled' })
+                            });
+                          } else {
+                            // Grant
+                            await fetchApi('/api/enrollments', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ studentId: manageAccessId, courseId: course.id, plan: 'monthly' })
+                            });
+                          }
+                          // Refresh data
+                          loadStudents();
+                        }}
+                      >
+                        {isGranted ? 'Revoke Access' : 'Grant Access'}
+                      </Button>
+                    </div>
                   </div>
-                  <Button 
-                    variant={isGranted ? "destructive" : "default"} 
-                    size="sm"
-                    onClick={async () => {
-                      if (isGranted) {
-                        // Revoke
-                        await fetchApi('/api/enrollments', {
-                          method: 'PUT',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ id: activeEnrollment.id, status: 'cancelled' })
-                        });
-                      } else {
-                        // Grant
-                        await fetchApi('/api/enrollments', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ studentId: manageAccessId, courseId: course.id, plan: 'monthly' })
-                        });
-                      }
-                      // Refresh data
-                      loadStudents();
-                    }}
-                  >
-                    {isGranted ? 'Revoke Access' : 'Grant Access'}
-                  </Button>
-                </div>
-              );
+                );
             })}
           </div>
         </DialogContent>
